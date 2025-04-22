@@ -1,0 +1,9 @@
+# config.yaml
+name: "UAV Architecture Test"
+parameters:
+  - name: "speed"
+    value: 10.5
+    min: 5.0
+    max: 20.0
+  - name: "altitude"
+    value: 100.0

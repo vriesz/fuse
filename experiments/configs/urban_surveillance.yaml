@@ -1,0 +1,15 @@
+mission:
+  type: surveillance
+  environment: urban
+  requirements:
+    - obstacle_avoidance
+    - license_plate_recognition
+constraints:
+  max_weight_kg: 7.0
+  max_power_w: 45.0
+  latency_ms: 50
+  budget_usd: 5000
+evaluation_metrics:
+  - processing_throughput
+  - power_efficiency
+  - detection_accuracy

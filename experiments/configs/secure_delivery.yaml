@@ -1,0 +1,8 @@
+mission: Surveillance
+swap:
+  max_weight_kg: 5.0
+  max_power_w: 40.0
+  max_size_cm: [50.0, 50.0, 20.0]
+autonomy_level: 4
+requires_ai: false
+secure_comms: true
