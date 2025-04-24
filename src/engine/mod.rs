@@ -1,11 +1,12 @@
 // src/engine/mod.rs
 
-use crate::models::{
-    UavConstraints, UavArchitecture,
-    Processor, DataFusion, FlightControllerType,
+use crate::models::components::{
+    Processor, DataFusion, FlightControllerType, 
     SensorSuite, CommsSystem, KalmanConfig,
-    NeuralNetworkConfig, PIDParams
+    NeuralNetworkConfig, PIDParams, UavArchitecture
 };
+
+use crate::models::constraints::UavConstraints;
 
 pub fn generate_architecture(constraints: &UavConstraints) -> UavArchitecture {
     // Processor and Data Fusion
@@ -50,7 +51,7 @@ pub fn generate_architecture(constraints: &UavConstraints) -> UavArchitecture {
 
     let flight_control = match constraints.autonomy_level {
         0..=2 => FlightControllerType::Betaflight,
-        3..=4 => FlightControllerType::PX4(pid_params),
+        3..=4 => FlightControllerType::PX4(pid_params.clone()),
         _ => FlightControllerType::Custom(pid_params),
     };
 

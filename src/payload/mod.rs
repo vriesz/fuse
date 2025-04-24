@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use crate::sensor_fusion::{Situation, ThreatLevel};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PayloadType {
@@ -19,9 +20,9 @@ pub enum PayloadType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PayloadManager {
-    current_payload: Option<PayloadType>,
-    power_consumption_w: f32,
-    operational: bool,
+    pub current_payload: Option<PayloadType>,
+    pub power_consumption_w: f32,
+    pub operational: bool,
 }
 
 impl PayloadManager {
@@ -46,5 +47,45 @@ impl PayloadManager {
 
     pub fn get_status(&self) -> (f32, bool) {
         (self.power_consumption_w, self.operational)
+    }
+    
+    pub fn toggle_operational(&mut self) {
+        self.operational = !self.operational;
+        if !self.operational {
+            self.power_consumption_w = 0.0;
+        } else {
+            self.activate();
+        }
+    }
+
+    pub fn standby(&mut self) {
+        self.operational = false;
+        self.power_consumption_w *= 0.3; // Reduce to 30%
+    }
+
+    pub fn set_high_alert_mode(&mut self, enabled: bool) {
+        if enabled {
+            self.activate();
+            // Increase power if needed for high alert mode
+            self.power_consumption_w *= 1.2;
+        }
+    }
+    
+    pub fn ooda_configure(&mut self, situation: &Situation) {
+        match situation.threat_level {
+            ThreatLevel::High => {
+                if let Some(PayloadType::SurveillanceCamera { .. }) = &self.current_payload {
+                    self.set_high_alert_mode(true);
+                }
+            },
+            ThreatLevel::Medium => {
+                self.activate();
+            },
+            ThreatLevel::Low => {
+                if self.power_consumption_w > 50.0 {
+                    self.standby();
+                }
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-use crate::models::UavArchitecture;
+use crate::models::components::UavArchitecture;
 use crate::models::components::Processor;
 
 pub fn optimize_cost(architectures: Vec<UavArchitecture>) -> UavArchitecture {

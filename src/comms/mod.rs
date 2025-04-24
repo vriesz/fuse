@@ -100,7 +100,7 @@ impl Clone for SslConnectorWrapper {
 impl SslConnectorWrapper {
     pub fn encrypt(&self, data: &[u8]) -> Vec<u8> {
         // This demonstrates that we're using the field
-        let connector = &self.0;
+        let _connector = &self.0;
         
         // Simple placeholder implementation
         let mut result = Vec::new();
@@ -109,10 +109,74 @@ impl SslConnectorWrapper {
     }
 }
 
+// Add custom serialization for SslConnectorWrapper
+impl Serialize for SslConnectorWrapper {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Skip serialization by serializing it as a unit type
+        serializer.serialize_unit()
+    }
+}
+
+impl<'de> Deserialize<'de> for SslConnectorWrapper {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // Skip deserialization and create a new instance
+        let _ = <()>::deserialize(deserializer)?;
+        
+        let builder = SslConnector::builder(SslMethod::tls())
+            .map_err(|e| serde::de::Error::custom(format!("OpenSSL error: {}", e)))?;
+        
+        Ok(SslConnectorWrapper(builder.build()))
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SecureChannel {
     connector: SslConnectorWrapper,
     heartbeat_interval: u32,
+}
+
+// Add custom serialization for SecureChannel
+impl Serialize for SecureChannel {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        // Only serialize the heartbeat_interval
+        let mut state = serializer.serialize_struct("SecureChannel", 1)?;
+        state.serialize_field("heartbeat_interval", &self.heartbeat_interval)?;
+        state.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for SecureChannel {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // Create a temporary struct that matches our serialization
+        #[derive(Deserialize)]
+        struct SecureChannelHelper {
+            heartbeat_interval: u32,
+        }
+        
+        let helper = SecureChannelHelper::deserialize(deserializer)?;
+        
+        // Create a new secure channel with default settings
+        match Self::new("AES256-SHA256") {
+            Ok(mut channel) => {
+                channel.heartbeat_interval = helper.heartbeat_interval;
+                Ok(channel)
+            },
+            Err(e) => Err(serde::de::Error::custom(format!("OpenSSL error: {}", e)))
+        }
+    }
 }
 
 impl SecureChannel {
@@ -150,12 +214,30 @@ pub struct Operator {
     pub last_heartbeat: Option<Instant>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RadarContact {
+    pub distance_m: f32,
+    pub bearing_deg: f32,
+    pub relative_speed_mps: f32,
+    pub via_link: LinkType,  // Which comms link detected this
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NavigationBeacon {
+    pub id: String,
+    pub position: (f32, f32),
+    pub signal_strength: f32,
+    pub link_used: LinkType,  // Which comms link received this
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommunicationHub {
     pub primary_link: CommunicationLink,
     pub backup_links: Vec<CommunicationLink>,
     pub operators: Vec<Operator>,
+    #[serde(skip)] // Skip this field during serialization/deserialization
     pub secure_channel: Option<SecureChannel>,
+    pub radar_contacts: Vec<RadarContact>,
 }
 
 impl CommunicationHub {
@@ -181,6 +263,7 @@ impl CommunicationHub {
             backup_links: Vec::new(),
             operators: Vec::new(),
             secure_channel,
+            radar_contacts: Vec::new(),
         }
     }
 
@@ -205,21 +288,53 @@ impl CommunicationHub {
             }
         }
     }
+    
+    pub fn log_beacon(&mut self, beacon: NavigationBeacon) {
+        // Implementation - e.g., store the beacon or process it
+        println!("Beacon logged: {} at {:?}", beacon.id, beacon.position);
+    }
 }
 
-// ------ Sensor Integration ------
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RadarContact {
-    pub distance_m: f32,
-    pub bearing_deg: f32,
-    pub relative_speed_mps: f32,
-    pub via_link: LinkType,  // Which comms link detected this
+// Define OODA cycle priority enum
+#[derive(Debug, Clone, PartialEq)]
+pub enum CommsPriority {
+    Low,
+    Medium,
+    High,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NavigationBeacon {
-    pub id: String,
-    pub position: (f32, f32),
-    pub signal_strength: f32,
-    pub link_used: LinkType,  // Which comms link received this
+impl CommunicationHub {
+    pub fn process_ooda_cycle(&mut self, ooda_time: Duration) -> CommsPriority {
+        let bandwidth_needed = match ooda_time {
+            t if t < Duration::from_millis(100) => CommsPriority::High,
+            t if t < Duration::from_millis(500) => CommsPriority::Medium,
+            _ => CommsPriority::Low,
+        };
+        
+        self.adjust_links(bandwidth_needed.clone());
+        bandwidth_needed
+    }
+
+    fn adjust_links(&mut self, priority: CommsPriority) {
+        match priority {
+            CommsPriority::High => {
+                self.primary_link.link_type = LinkType::WiFiDirect {
+                    bandwidth_mbps: 100,
+                    channel: 36,
+                };
+            },
+            CommsPriority::Medium => {
+                self.primary_link.link_type = LinkType::MAVLink {
+                    version: 2,
+                    heartbeat_interval_ms: 500,
+                };
+            },
+            CommsPriority::Low => {
+                self.primary_link.link_type = LinkType::LoRa {
+                    frequency_mhz: 915,
+                    spreading_factor: 10,
+                };
+            }
+        }
+    }
 }

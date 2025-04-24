@@ -1,5 +1,6 @@
-use uav_arch_gen::models::{UavConstraints, SWaPConstraints, MissionType};
-use uav_arch_gen::engine::generate_architecture;
+use uav_arch_gen::models::UavConstraints;
+use uav_arch_gen::models::constraints::{SWaPConstraints, MissionType};
+use uav_arch_gen::generate_architecture;
 
 fn main() {
     let constraints = UavConstraints {

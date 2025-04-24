@@ -1,12 +1,24 @@
-pub mod models;
-pub mod engine;
-pub mod experiment;
-pub mod flight_control;
-// pub mod optimization;
-pub mod payload;
+// src/lib.rs
 pub mod comms;
-// pub mode ooda;
-// pub mod sensor_fusion;
+pub mod flight_control;
+pub mod models;
+pub mod payload;
+pub mod sensor_fusion;
+pub mod ooda;
+pub mod operations;
+pub mod engine;
 
-// pub use models::*;
+pub use models::constraints::UavConstraints;
 pub use engine::generate_architecture;
+
+#[cfg(test)]
+mod tests {
+    mod comms_tests;
+    mod flight_control_tests;
+    mod payload_tests;
+    mod sensor_fusion_tests;
+    mod ooda_tests;
+    mod engine_tests;
+    mod integration_tests;
+    mod hitl_tests;
+}

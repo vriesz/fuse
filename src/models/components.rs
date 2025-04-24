@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-// use crate::flight_control::pid::PIDController;
+use crate::flight_control::FlightController;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct KalmanConfig {
@@ -68,7 +68,7 @@ pub struct UavArchitecture {
     pub comms: CommsSystem,
 }
 
-impl From<FlightControllerType> for crate::flight_control::FlightController {
+impl From<FlightControllerType> for FlightController {
     fn from(fc_type: FlightControllerType) -> Self {
         match fc_type {
             FlightControllerType::PX4(params) => Self::from_params(params.roll),

@@ -1,10 +1,43 @@
-use crate::{comms::*, payload::*, flight_control::*};
+use crate::comms::CommunicationHub;
+use crate::payload::PayloadManager;
+use crate::flight_control::FlightController;
+use crate::sensor_fusion::{SensorData, SensorFusion, Situation, ThreatLevel};
 use std::time::{Instant, Duration};
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Decision {
+    ChangeAltitude(f32),
+    SwitchPayloadMode,
+    // Add other decisions as needed
+}
+
+impl Decision {
+    pub fn matches(&self, situation: &Situation) -> bool {
+        // Simple implementation
+        match (self, &situation.threat_level) {
+            (Decision::ChangeAltitude(_), ThreatLevel::High) => true,
+            (Decision::SwitchPayloadMode, ThreatLevel::Medium) | 
+            (Decision::SwitchPayloadMode, ThreatLevel::Low) => true,
+            _ => false,
+        }
+    }
+}
+
+pub struct DecisionMaker;
+
+impl DecisionMaker {
+    pub fn make(situation: &Situation, _payload: &PayloadManager) -> Decision {
+        match situation.threat_level {
+            ThreatLevel::High => Decision::ChangeAltitude(100.0),
+            _ => Decision::SwitchPayloadMode,
+        }
+    }
+}
+
 pub struct OodaLoop {
-    last_cycle_time: Duration,
-    sensor_fusion: SensorFusion,
-    decision_cache: Option<Decision>,
+    pub last_cycle_time: Duration,
+    pub sensor_fusion: SensorFusion,
+    pub decision_cache: Option<Decision>, // Make this field public
 }
 
 impl OodaLoop {
@@ -26,7 +59,7 @@ impl OodaLoop {
         let start_time = Instant::now();
         
         // OBSERVE
-        let sensor_data = self.observe(comms);
+        let sensor_data = self.observe(comms, payload);
         
         // ORIENT
         let situation = self.orient(&sensor_data);
@@ -41,19 +74,34 @@ impl OodaLoop {
         self.last_cycle_time
     }
 
-    fn observe(&self, comms: &CommunicationHub) -> SensorData {
+    fn observe(&self, comms: &CommunicationHub, payload: &PayloadManager) -> SensorData {
+        // Create dummy IMU reading since we don't have actual sensors
+        let imu = crate::sensor_fusion::IMUReading {
+            accel: nalgebra::Vector3::new(0.0, 0.0, 9.81), // Standard gravity
+            gyro: nalgebra::Vector3::new(0.0, 0.0, 0.0),
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        };
+        
         SensorData {
+            imu,
+            gps: None,
+            lidar: None,
             radar_contacts: comms.radar_contacts.clone(),
             operator_messages: comms.operators.iter()
-                .filter(|o| o.last_heartbeat.elapsed() < Duration::from_secs(5))
+                .filter(|o| match o.last_heartbeat {
+                    Some(time) => time.elapsed() < Duration::from_secs(5),
+                    None => false
+                })
                 .count(),
             payload_status: payload.get_status(),
-            // ... other sensor inputs
         }
     }
 
     fn orient(&mut self, data: &SensorData) -> Situation {
-        // AI/ML threat assessment would go here
+        // Use sensor fusion to analyze the data
         self.sensor_fusion.analyze(data)
     }
 

@@ -3,7 +3,9 @@
 pub mod pid;
 pub use pid::PIDController;
 
-#[derive(Debug, Clone, PartialEq)]
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum FlightMode {
     Manual,
     GPSHold,
@@ -11,7 +13,7 @@ pub enum FlightMode {
     EmergencyLand,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FlightController {
     pub mode: FlightMode,
     pub pid: PIDController,
@@ -33,5 +35,10 @@ impl FlightController {
             pid: PIDController::new(params.0, params.1, params.2),
             stability_threshold: 2.5,
         }
+    }
+    
+    pub fn adjust_altitude(&mut self, delta: f32) {
+        // Implementation
+        println!("Adjusting altitude by {}", delta);
     }
 }

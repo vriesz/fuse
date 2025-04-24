@@ -1,4 +1,10 @@
-use crate::{payload::PayloadManager, comms::CommunicationHub};
+use serde::{Serialize, Deserialize};
+use crate::flight_control::FlightController;
+use crate::models::constraints::MissionType;
+use crate::payload::PayloadType;
+use crate::comms::LinkType;
+use crate::comms::CommunicationHub;
+use crate::payload::PayloadManager;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UavSystems {
@@ -29,7 +35,10 @@ impl UavSystems {
 
         Self {
             payload,
-            comms: CommunicationHub::new(),
+            comms: CommunicationHub::new(LinkType::MAVLink { 
+                version: 2, 
+                heartbeat_interval_ms: 500 
+            }, true),
             flight_controller: FlightController::new(),
             // ... other initializations
         }

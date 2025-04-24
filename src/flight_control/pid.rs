@@ -1,13 +1,15 @@
 // src/flight_control/pid.rs
 
-#[derive(Debug, Clone)]
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PIDController {
     pub kp: f32,
     pub ki: f32,
     pub kd: f32,
     pub setpoint: f32,
-    integral: f32,
-    last_error: f32,
+    pub integral: f32,
+    pub last_error: f32,
 }
 
 impl PIDController {

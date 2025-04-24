@@ -1,25 +1,35 @@
+use crate::models::architecture::UavSystems;
+use crate::comms::{RadarContact, NavigationBeacon, LinkType};
+
 impl UavSystems {
-    pub fn execute_mission(&mut self) {
-        // 1. Establish communications
-        self.comms.add_operator("CTRL-1".into(), 3);
-        
-        // 2. Activate payload
-        self.payload.activate();
-        
-        // 3. Handle radar contacts
-        self.comms.update_radar(vec![
+    pub fn scan_surroundings(&mut self) -> Vec<RadarContact> {
+        // Simulate finding some radar contacts
+        let contacts = vec![
             RadarContact {
-                distance_m: 1500.0,
+                distance_m: 1000.0,
                 bearing_deg: 45.0,
-                relative_speed_mps: -12.5,
+                relative_speed_mps: 20.0,
+                via_link: LinkType::MAVLink {
+                    version: 2,
+                    heartbeat_interval_ms: 500,
+                },
             }
-        ]);
+        ];
         
-        // 4. Navigation
+        // Add the contacts to the comms system
+        self.comms.radar_contacts = contacts.clone();
+        contacts
+    }
+    
+    pub fn register_navigation_beacon(&mut self, id: &str, position: (f32, f32)) {
         self.comms.log_beacon(NavigationBeacon {
-            id: "NAV-1".into(),
-            position: (34.0522, -118.2437), // LA coordinates
+            id: id.to_string(),
+            position,
             signal_strength: 0.85,
+            link_used: LinkType::LoRa {
+                frequency_mhz: 915,
+                spreading_factor: 10,
+            },
         });
     }
 }

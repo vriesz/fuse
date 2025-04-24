@@ -1,9 +1,10 @@
 // src/models/mod.rs
+
 pub mod constraints;
 pub mod components;
+pub mod architecture;
 
-pub use components::{
-    UavArchitecture, Processor, DataFusion, FlightControllerType,
-    SensorSuite, CommsSystem, KalmanConfig, NeuralNetworkConfig, PIDParams
-};
-pub use constraints::{UavConstraints, SWaPConstraints, MissionType};
+// Re-export important types
+pub use constraints::UavConstraints;
+pub use components::{DataFusion, NeuralNetworkConfig, KalmanConfig};
+pub use architecture::UavSystems;

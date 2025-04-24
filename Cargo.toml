@@ -8,15 +8,27 @@ default = []
 ai = []
 hitl = []
 tch = []
+bench = []
+
+[[bench]]
+name = "architecture"
+harness = false
+
+[[bench]]
+name = "pid_bench"
+harness = false
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-nalgebra = "0.32"
 openssl = "0.10"
 thiserror = "1.0"
-criterion = { version = "0.4", optional = true }
 clap = { version = "4.4", features = ["derive"] }
 serde_yaml = "0.9"
+approx = "0.5"  # For floating point comparisons
+serde = { version = "1.0", features = ["derive"] }
+nalgebra = { version = "0.32", features = ["serde-serialize"] }
+
 
 [dev-dependencies]
 rstest = "0.18"
+approx = "0.5"
+criterion = "0.4"
