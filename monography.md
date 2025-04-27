@@ -61,25 +61,76 @@ This approach allows for rapid adaptation (< 100ms) to changing mission conditio
 
 ## **3. System Implementation**  
 ### **3.1 Architectural Overview**  
+
+#### **3.1.1 Core OODA Loop**
 ```mermaid  
-flowchart TB  
-    subgraph OODA  
-        O[Observe: ROS2/MAVLink] --> R[Orient: SNN/Rules]  
-        R --> D[Decide: Architecture Selection]  
-        D --> A[Act: PX4 Deploy]  
+flowchart LR  
+    subgraph OODA["OODA Decision Cycle"]
+        O[Observe: <br>Sensor Fusion] --> OR[Orient: <br>Threat Analysis]  
+        OR --> D[Decide: <br>Architecture Selection]  
+        D --> A[Act: <br>PX4 Deployment]  
+        A -->|Feedback| O
     end  
-    A -->|Feedback| HITL[HITL: Gazebo]  
-    HITL -->|Latency/Power| O  
-    R -.-> T[Time-Triggered Architecture]
-    R -.-> Q[DDS QoS Policies]
-    R -.-> F[Fog Computing Edge]
-    R -.-> P[PALS Framework]
-    R -.-> Z[Zero-Copy IPC]
-    R -.-> M[Multi-Agent FIPA Protocols]
-    R -.-> X[XRCE-DDS]
-    R -.-> A653[ARINC 653 Middleware]
+    H[HITL: Gazebo] <-->|Validation| OODA
 ```  
-*Fig. 1: Closed-loop architecture generation with communication alternatives*
+*Fig. 1a: Core OODA loop with feedback cycle*
+
+#### **3.1.2 Communication Architecture Options**
+```mermaid
+flowchart TB
+    subgraph Safety["Safety-Critical Domain"]
+        TTA[Time-Triggered<br>Architecture]
+        ARINC[ARINC 653<br>Middleware]
+        PALS[PALS<br>Framework]
+    end
+    
+    subgraph Performance["Performance/Flexibility Domain"]
+        DDS[DDS QoS<br>Policies]
+        ZERO[Zero-Copy<br>IPC]
+        XRCE[XRCE-DDS]
+    end
+    
+    subgraph Coordination["Coordination Domain"]
+        FIPA[FIPA Multi-Agent<br>Protocols]
+        FOG[Fog Computing<br>Edge Nodes]
+    end
+    
+    DECIDE[Architecture<br>Selection Engine] --> Safety
+    DECIDE --> Performance
+    DECIDE --> Coordination
+```
+*Fig. 1b: Communication architecture options by domain*
+
+#### **3.1.3 Integrated System View**
+```mermaid
+flowchart TB
+    subgraph UAV["UAV Mission Control"]
+        OBS[Observation<br>Module] --> ORIENT[Orientation<br>Engine]
+        ORIENT --> DECIDE[Decision<br>Engine]
+        DECIDE --> ACT[Action<br>Controller]
+        ACT --> DEPLOY[PX4<br>Deployment]
+        DEPLOY -->|Feedback| OBS
+    end
+    
+    subgraph CommLayer["Communication Layer"]
+        TTA[Time-Triggered<br>Protocols]
+        DDS[DDS/QoS<br>Mechanisms]
+        XRCE[XRCE-DDS<br>for Constraints]
+    end
+    
+    subgraph DistLayer["Distribution Layer"]
+        ZERO[Zero-Copy<br>Local IPC]
+        PALS[PALS<br>Synchronization]
+        FOG[Fog<br>Computing]
+        FIPA[FIPA<br>Multi-Agent]
+    end
+    
+    DECIDE <--> CommLayer
+    DECIDE <--> DistLayer
+    
+    HITL[HITL:<br>Gazebo] -->|Validation| UAV
+```
+*Fig. 1c: Integrated system with layered communication architecture*
 
 The system follows a closed-loop feedback mechanism that continuously monitors environmental conditions, analyzes them, makes architectural decisions, and implements changes. The feedback loop ensures that the system learns from previous decisions and improves over time. The integration with HITL simulation provides a safe testing environment before deploying changes to the actual UAV hardware.
 
@@ -280,6 +331,73 @@ We initially considered blockchain-based consensus for distributed decision-maki
 ---
 
 ## **6. Consensus Landscape Position**  
+
+```mermaid
+flowchart LR  
+    subgraph OODA["OODA Decision Cycle"]
+        O[Observe: <br>Sensor Fusion] --> OR[Orient: <br>Threat Analysis]  
+        OR --> D[Decide: <br>Architecture Selection]  
+        D --> A[Act: <br>PX4 Deployment]  
+        A -->|Feedback| O
+    end  
+    H[HITL: Gazebo] <-->|Validation| OODA
+```
+
+```mermaid
+flowchart TB
+    subgraph Safety["Safety-Critical Domain"]
+        TTA[Time-Triggered<br>Architecture]
+        ARINC[ARINC 653<br>Middleware]
+        PALS[PALS<br>Framework]
+    end
+    
+    subgraph Performance["Performance/Flexibility Domain"]
+        DDS[DDS QoS<br>Policies]
+        ZERO[Zero-Copy<br>IPC]
+        XRCE[XRCE-DDS]
+    end
+    
+    subgraph Coordination["Coordination Domain"]
+        FIPA[FIPA Multi-Agent<br>Protocols]
+        FOG[Fog Computing<br>Edge Nodes]
+    end
+    
+    DECIDE[Architecture<br>Selection Engine] --> Safety
+    DECIDE --> Performance
+    DECIDE --> Coordination
+```
+
+```mermaid
+flowchart TB
+    subgraph UAV["UAV Mission Control"]
+        OBS[Observation<br>Module] --> ORIENT[Orientation<br>Engine]
+        ORIENT --> DECIDE[Decision<br>Engine]
+        DECIDE --> ACT[Action<br>Controller]
+        ACT --> DEPLOY[PX4<br>Deployment]
+        DEPLOY -->|Feedback| OBS
+    end
+    
+    subgraph CommLayer["Communication Layer"]
+        TTA[Time-Triggered<br>Protocols]
+        DDS[DDS/QoS<br>Mechanisms]
+        XRCE[XRCE-DDS<br>for Constraints]
+    end
+    
+    subgraph DistLayer["Distribution Layer"]
+        ZERO[Zero-Copy<br>Local IPC]
+        PALS[PALS<br>Synchronization]
+        FOG[Fog<br>Computing]
+        FIPA[FIPA<br>Multi-Agent]
+    end
+    
+    DECIDE <--> CommLayer
+    DECIDE <--> DistLayer
+    
+    HITL[HITL:<br>Gazebo] -->|Validation| UAV
+```
+
+*Fig. 2: Positioning of communication architectures in the consensus landscape*
+
 Our comprehensive implementation positions these communication architectures across a spectrum of consensus approaches:
 
 1. **High Determinism / Safety-Critical Domain**:
