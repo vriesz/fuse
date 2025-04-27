@@ -5,6 +5,13 @@ use serde::{Serialize, Deserialize, Serializer, Deserializer};
 use std::time::{Duration, Instant};
 use openssl::ssl::{SslMethod, SslConnector};
 
+pub mod tta;
+pub mod dds;
+pub mod fog;
+
+use tta::TTACycle;
+use dds::DDSQoSProfile;
+use fog::FogComputingManager;
 // Custom serialization for Instant (as duration since current time)
 mod instant_serde {
     use super::*;
@@ -70,6 +77,28 @@ pub enum LinkType {
     MilitaryEncrypted {
         key_rotation_minutes: u32,
         cipher_suite: String,
+    },
+    // New communication types
+    TimeTriggered {
+        cycle_time_us: u32,
+        slot_count: u8,
+    },
+    DDS {
+        reliability_qos: String,
+        deadline_ms: u32,
+        history_depth: u32,
+    },
+    FogComputing {
+        edge_node_id: String,
+        offload_threshold: f32,
+    },
+    XRCEDDS {
+        resource_constraints: bool,
+        mtu_size: u16,
+    },
+    PALS {
+        period_ms: u32,
+        synchronization_window_us: u32,
     },
 }
 
@@ -238,10 +267,23 @@ pub struct CommunicationHub {
     #[serde(skip)] // Skip this field during serialization/deserialization
     pub secure_channel: Option<SecureChannel>,
     pub radar_contacts: Vec<RadarContact>,
+    #[serde(skip)]
+    pub tta_cycle: Option<TTACycle>,
+    #[serde(skip)]
+    pub dds_profile: Option<DDSQoSProfile>,
+    #[serde(skip)]
+    pub fog_manager: Option<FogComputingManager>,
 }
 
 impl CommunicationHub {
     pub fn new(primary: LinkType, secure: bool) -> Self {
+
+        let primary_link = CommunicationLink {
+            link_type: primary.clone(),
+            encryption: secure,
+            last_active: None,
+        };
+
         let secure_channel = if secure {
             match SecureChannel::new("AES256-SHA256") {
                 Ok(channel) => Some(channel),
@@ -254,16 +296,29 @@ impl CommunicationHub {
             None
         };
 
-        Self {
-            primary_link: CommunicationLink {
-                link_type: primary,
-                encryption: secure,
-                last_active: None,
+        // Initialize appropriate SOTA comms based on link type
+        let (tta_cycle, dds_profile, fog_manager) = match &primary {
+            LinkType::TimeTriggered { cycle_time_us, slot_count } => {
+                (Some(TTACycle::new(*cycle_time_us, *slot_count)), None, None)
             },
+            LinkType::DDS { .. } => {
+                (None, Some(DDSQoSProfile::default()), None)
+            },
+            LinkType::FogComputing { offload_threshold, .. } => {
+                (None, None, Some(FogComputingManager::new(*offload_threshold)))
+            },
+            _ => (None, None, None)
+        };
+
+        Self {
+            primary_link,
             backup_links: Vec::new(),
             operators: Vec::new(),
             secure_channel,
             radar_contacts: Vec::new(),
+            tta_cycle,
+            dds_profile,
+            fog_manager,
         }
     }
 
@@ -311,25 +366,71 @@ impl CommunicationHub {
             _ => CommsPriority::Low,
         };
         
+        match bandwidth_needed {
+            CommsPriority::High => {
+                // Fast OODA cycle: use high-bandwidth, low-latency link
+                if self.dds_profile.is_none() {
+                    self.dds_profile = Some(DDSQoSProfile::critical_control());
+                }
+                self.primary_link.link_type = LinkType::DDS { 
+                    reliability_qos: "RELIABLE".into(),
+                    deadline_ms: 5,
+                    history_depth: 1,
+                };
+            },
+            CommsPriority::Medium => {
+                // Medium OODA cycle: balance reliability and performance
+                if self.tta_cycle.is_none() {
+                    self.tta_cycle = Some(TTACycle::new(10000, 8));
+                }
+                self.primary_link.link_type = LinkType::TimeTriggered { 
+                    cycle_time_us: 10000,
+                    slot_count: 8,
+                };
+            },
+            CommsPriority::Low => {
+                // Slow OODA cycle: optimize for power efficiency
+                if self.fog_manager.is_none() {
+                    self.fog_manager = Some(FogComputingManager::new(0.7));
+                }
+                self.primary_link.link_type = LinkType::LoRa {
+                    frequency_mhz: 915,
+                    spreading_factor: 10,
+                };
+            }
+        }
         self.adjust_links(bandwidth_needed.clone());
         bandwidth_needed
     }
 
-    fn adjust_links(&mut self, priority: CommsPriority) {
+    pub fn adjust_links(&mut self, priority: CommsPriority) {
         match priority {
             CommsPriority::High => {
-                self.primary_link.link_type = LinkType::WiFiDirect {
-                    bandwidth_mbps: 100,
-                    channel: 36,
+                // Fast OODA cycle: use high-bandwidth, low-latency link
+                if self.dds_profile.is_none() {
+                    self.dds_profile = Some(DDSQoSProfile::critical_control());
+                }
+                self.primary_link.link_type = LinkType::DDS { 
+                    reliability_qos: "RELIABLE".into(),
+                    deadline_ms: 5,
+                    history_depth: 1,
                 };
             },
             CommsPriority::Medium => {
-                self.primary_link.link_type = LinkType::MAVLink {
-                    version: 2,
-                    heartbeat_interval_ms: 500,
+                // Medium OODA cycle: balance reliability and performance
+                if self.tta_cycle.is_none() {
+                    self.tta_cycle = Some(TTACycle::new(10000, 8));
+                }
+                self.primary_link.link_type = LinkType::TimeTriggered { 
+                    cycle_time_us: 10000,
+                    slot_count: 8,
                 };
             },
             CommsPriority::Low => {
+                // Slow OODA cycle: optimize for power efficiency
+                if self.fog_manager.is_none() {
+                    self.fog_manager = Some(FogComputingManager::new(0.7));
+                }
                 self.primary_link.link_type = LinkType::LoRa {
                     frequency_mhz: 915,
                     spreading_factor: 10,
