@@ -132,10 +132,79 @@ flowchart TB
 ```
 *Fig. 1c: Integrated system with layered communication architecture*
 
+#### **3.1.4 Hardware Integration Framework**
+```mermaid
+flowchart TB
+    subgraph MissionLayer["Mission Planning Layer"]
+        OODA[OODA Decision<br>Cycle Engine]
+    end
+    
+    subgraph MiddlewareLayer["Middleware Layer"]
+        ROS2[ROS 2<br>Humble]
+        ARINC[ARINC 653]
+        PALS[PALS Framework]
+    end
+    
+    subgraph HardwareLayer["Hardware Layer"]
+        subgraph Processing["Processing Units"]
+            JETSON[Jetson AGX<br>Xavier]
+            FPGA[FPGA<br>Accelerators]
+        end
+        
+        subgraph Control["Control Systems"]
+            PIXHAWK[Pixhawk<br>Flight Controller]
+        end
+        
+        subgraph Sensors["Sensor Systems"]
+            CAMERA[Cameras]
+            IMU[IMU]
+            LIDAR[LIDAR]
+        end
+        
+        Processing <--> Control
+        Processing <--> Sensors
+        Control <--> Sensors
+    end
+    
+    MissionLayer <--> MiddlewareLayer
+    MiddlewareLayer <--> HardwareLayer
+    
+    subgraph Simulation["Simulation Environment"]
+        GAZEBO[Gazebo<br>Physics Engine]
+        PX4SIM[PX4<br>SITL]
+    end
+    
+    Simulation <-->|HITL Testing| HardwareLayer
+```
+*Fig. 1d: Hardware integration framework with simulation interfaces*
+
 The system follows a closed-loop feedback mechanism that continuously monitors environmental conditions, analyzes them, makes architectural decisions, and implements changes. The feedback loop ensures that the system learns from previous decisions and improves over time. The integration with HITL simulation provides a safe testing environment before deploying changes to the actual UAV hardware.
 
-### **3.2 Core Components**  
-#### **3.2.1 Observation Module**  
+### **3.2 Hardware Framework Explanation**
+The hardware integration framework provides a comprehensive view of how physical and simulated components interact within our adaptive avionics architecture:
+
+1. **Simulation Environment (Gazebo)**
+   Gazebo serves as our hardware-in-the-loop (HITL) testing environment, simulating physical UAV dynamics, sensors, and environmental conditions. It connects to the PX4 flight stack via MAVLink, allowing for safe validation of architectural changes before deployment to physical hardware.
+
+2. **Flight Controller Hardware (Pixhawk)**
+   In real-world deployments, the Pixhawk handles low-level flight control functions including attitude management and motor control. It communicates with our high-level processing unit (NVIDIA Jetson AGX Xavier) using the MAVLink protocol at 57600 baud, creating a separation of concerns between critical flight functions and adaptive architecture decisions.
+
+3. **FPGA Implementation**
+   The system incorporates FPGAs for specialized processing tasks, particularly:
+   - ResNet-18 neural network acceleration for threat classification at 30fps
+   - Hardware acceleration for time-critical processing chains
+   - Future integration with neuromorphic computing architectures like Intel's Loihi 2
+
+4. **Cross-Hardware Communication**
+   The architecture implements several inter-hardware communication methods:
+   - Time-Triggered Architecture (TTA): 3.1ms latency, offering deterministic timing for critical systems
+   - Zero-Copy IPC: 0.8ms latency for efficient intra-device communication
+   - DDS/QoS: 7.8ms latency for reliable distributed communication
+
+This hardware-agnostic approach at the upper layers, combined with hardware-specific optimizations at lower levels, enables the system to adapt to different UAV platforms while maintaining performance and safety guarantees.
+
+### **3.3 Core Components**  
+#### **3.3.1 Observation Module**  
 The observation module serves as the sensory interface to the UAV's environment. It implements sensor fusion through two primary communication protocols:
 
 - **MAVLink v2.0**: Operating at 57600 baud with CRC-16/X.25 error detection, this lightweight messaging protocol efficiently transmits telemetry data, commands, and status information between the UAV and ground control stations. Its compact binary serialization format minimizes bandwidth requirements while maintaining data integrity.
@@ -144,7 +213,7 @@ The observation module serves as the sensory interface to the UAV's environment.
 
 The Observation structure implements rigorous validation to ensure data integrity. Battery level readings are constrained between 0.0 and 1.0, threat classifications are limited to a maximum of 16 entries to prevent memory exhaustion, and all observations are timestamped with millisecond precision using UTC time.
 
-#### **3.2.2 Orientation Engine**  
+#### **3.3.2 Orientation Engine**  
 The orientation engine processes raw observational data into an actionable understanding of the current situation. It employs a hybrid approach combining rule-based and machine learning techniques:
 
 1. **Rule-based system**: A finite state machine (FSM) handles critical state transitions with deterministic behavior. For example, when a critical threat is detected, the system automatically enables secure communications. Similarly, when threat levels are low, power consumption is reduced by 30% to extend mission duration. These rules provide predictable behavior for safety-critical decisions.
@@ -153,7 +222,7 @@ The orientation engine processes raw observational data into an actionable under
 
 The combination of rule-based and ML approaches provides a balance of deterministic safety guarantees and adaptive intelligence that can handle novel situations not explicitly programmed.
 
-#### **3.2.3 Communication Architecture**  
+#### **3.3.3 Communication Architecture**  
 Our framework implements multiple state-of-the-art communication approaches to address different mission requirements:
 
 1. **Time-Triggered Architecture (TTA)**:  
@@ -468,5 +537,3 @@ O. Communication Architecture Benchmark Methodology
 P. PALS Implementation Details
 Q. Zero-Copy IPC Configuration Guide
 R. FIPA Protocol Implementation Specifications
-
----
