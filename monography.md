@@ -313,7 +313,9 @@ pub struct CommConfig {
 }
 ```
 
-This comprehensive configuration allows the system to dynamically adjust communication mechanisms based on mission requirements, threat levels, and available resources, ensuring optimal performance across diverse operational scenarios.
+This unified configuration struct serves as the central interface through which the OODA decision engine dynamically reconfigures communication architectures at runtime. When mission parameters change, the system can selectively enable, disable, or tune specific communication approaches without requiring specialized interfaces for each protocol. For example, during high-threat scenarios requiring minimal latency, the system might enable Zero-Copy IPC with a large shared memory allocation while disabling Fog Computing to ensure all processing remains local.
+
+The comprehensive configuration allows the system to dynamically adjust communication mechanisms based on mission requirements, threat levels, and available resources, ensuring optimal performance across diverse operational scenarios.
 
 ---
 
@@ -357,6 +359,8 @@ Success rates are defined as the percentage of missions completed without safety
 | XRCE-DDS            | 4.2 ± 0.7    | 6.3              | 99.923          | Very Low      |
 | ARINC 653           | 2.3 ± 0.3    | 18.2             | 99.996          | Medium        |
 | Blockchain (removed)| 3200 ± 850   | 2.1              | 100.000         | Very High     |
+
+*Table 2: Communication architecture performance comparison (n=200 trials)*
 
 *Table 2: Communication architecture performance comparison (n=200 trials)*
 
