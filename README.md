@@ -1,6 +1,5 @@
 Here's a comprehensive `README.md` for your UAV architecture generation project:
 
-```markdown
 # UAV Architecture Generation System
 
 ![Project Banner](https://placehold.co/1200x400?text=UAV+Architecture+Generation+System)
