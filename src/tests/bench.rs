@@ -1,3 +1,5 @@
+// src/tests/bench.rs
+
 #[cfg(feature = "bench")]
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use crate::engine::generate_architecture;

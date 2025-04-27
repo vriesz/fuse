@@ -7,6 +7,7 @@ pub mod sensor_fusion;
 pub mod ooda;
 pub mod operations;
 pub mod engine;
+pub mod optimization;
 
 pub use models::constraints::UavConstraints;
 pub use engine::generate_architecture;

@@ -1,3 +1,5 @@
+// src/sensor_fusion/mod.rs
+
 use nalgebra::Vector3;
 use serde::{Serialize, Deserialize};
 use crate::models::components::NeuralNetworkConfig;

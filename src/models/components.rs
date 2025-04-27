@@ -1,3 +1,5 @@
+// src/models/components.rs
+
 use serde::{Serialize, Deserialize};
 use crate::flight_control::FlightController;
 

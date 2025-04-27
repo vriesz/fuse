@@ -1,3 +1,5 @@
+// src/payload/mod.rs
+
 use serde::{Serialize, Deserialize};
 use crate::sensor_fusion::{Situation, ThreatLevel};
 

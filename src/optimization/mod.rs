@@ -1,3 +1,5 @@
+// src/optimization/mod.rs
+
 use crate::models::components::UavArchitecture;
 use crate::models::components::Processor;
 

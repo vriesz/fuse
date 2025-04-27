@@ -1,3 +1,5 @@
+// src/models/architecture.rs
+
 use serde::{Serialize, Deserialize};
 use crate::flight_control::FlightController;
 use crate::models::constraints::MissionType;
@@ -11,7 +13,6 @@ pub struct UavSystems {
     pub payload: PayloadManager,
     pub comms: CommunicationHub,
     pub flight_controller: FlightController,
-    // ... other systems
 }
 
 impl UavSystems {

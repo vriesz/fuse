@@ -1,3 +1,5 @@
+// src/ooda/mod.rs
+
 use crate::comms::CommunicationHub;
 use crate::payload::PayloadManager;
 use crate::flight_control::FlightController;

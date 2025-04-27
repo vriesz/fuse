@@ -1,3 +1,5 @@
+// src/payload/ooda_integration.rs
+
 impl PayloadManager {
     pub fn ooda_configure(&mut self, situation: &Situation) {
         match situation.threat_level {
