@@ -4,7 +4,7 @@ use crate::models::architecture::UavSystems;
 use crate::models::constraints::MissionType;
 use crate::comms::LinkType;
 use serde::{Serialize, Deserialize};
-use std::time::Duration;
+// use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WeatherResult {
@@ -220,7 +220,6 @@ pub fn print_terrain_results(results: &[TerrainResult]) {
              results[0].trials);
 }
 
-// Extension methods for UavSystems to handle environmental conditions
 trait EnvironmentalTesting {
     fn apply_weather_conditions(&mut self, conditions: &EnvironmentalCondition);
     fn apply_terrain_conditions(&mut self, conditions: &EnvironmentalCondition);

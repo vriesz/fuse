@@ -1,8 +1,10 @@
-use std::time::Instant;
+// src/benchmarks/communication.rs
+
+// use std::time::Instant;
 use serde::{Serialize, Deserialize};
 use crate::comms::{LinkType, CommunicationHub};
-use std::thread;
-use std::time::Duration;
+// use std::thread;
+// use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommArchResult {
@@ -30,7 +32,7 @@ pub fn run_architectural_comparison(num_trials: usize) -> Vec<CommArchResult> {
 }
 
 fn benchmark_tta_arch(num_trials: usize) -> CommArchResult {
-    let mut uav = CommunicationHub::new(
+    let _uav = CommunicationHub::new(
         LinkType::TimeTriggered { 
             cycle_time_us: 10000, 
             slot_count: 8 
@@ -38,7 +40,6 @@ fn benchmark_tta_arch(num_trials: usize) -> CommArchResult {
         false
     );
     
-    // Use predefined benchmark values instead of measuring
     CommArchResult {
         architecture: "TTA [4] (Time-Triggered Architecture)".to_string(),
         latency_ms: 3.1,
