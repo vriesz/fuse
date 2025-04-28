@@ -1,6 +1,6 @@
 # **UNIVERSIDADE DE SÃO PAULO**
 # **ESCOLA DE ENGENHARIA DE SÃO CARLOS**
-**
+
 
 ## **Front Matter**
 
