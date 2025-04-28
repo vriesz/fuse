@@ -14,9 +14,5 @@ fn pid_benchmark(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!{
-    name = benches;
-    config = Criterion::default();
-    targets = pid_benchmark
-}
+criterion_group!(benches, pid_benchmark);
 criterion_main!(benches);

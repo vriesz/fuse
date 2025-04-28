@@ -1,4 +1,5 @@
 // src/lib.rs
+pub mod benchmarks;
 pub mod comms;
 pub mod flight_control;
 pub mod models;

@@ -10,10 +10,5 @@ fn bench_arch_gen(c: &mut Criterion) {
     });
 }
 
-criterion_group!{
-    name = benches;
-    config = Criterion::default();
-    targets = bench_arch_gen
-}
-
+criterion_group!(benches, bench_arch_gen);
 criterion_main!(benches);

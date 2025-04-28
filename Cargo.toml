@@ -10,12 +10,20 @@ hitl = []
 tch = []
 bench = []
 
+[lib]
+# This tells Cargo that the package contains a library
+path = "src/lib.rs"
+
 [[bench]]
 name = "architecture"
 harness = false
 
 [[bench]]
 name = "pid_bench"
+harness = false
+
+[[bench]]
+name = "integrated_bench"
 harness = false
 
 [dependencies]
@@ -31,4 +39,9 @@ nalgebra = { version = "0.32", features = ["serde-serialize"] }
 [dev-dependencies]
 rstest = "0.18"
 approx = "0.5"
-criterion = "0.4"
+criterion = { version = "0.4", features = ["html_reports"] }
+rand = "0.8"  # For random number generation
+
+[profile.bench]
+opt-level = 3
+debug = false

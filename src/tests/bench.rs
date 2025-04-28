@@ -7,6 +7,8 @@ use crate::models::constraints::UavConstraints;
 use crate::ooda::OodaLoop;
 use crate::models::architecture::UavSystems;
 use crate::models::constraints::MissionType;
+use crate::benchmarks;
+
 
 #[cfg(feature = "bench")]
 pub fn bench_architecture_generation(c: &mut Criterion) {
@@ -45,6 +47,16 @@ pub fn bench_ooda_cycle(c: &mut Criterion) {
 }
 
 #[cfg(feature = "bench")]
-criterion_group!(benches, bench_architecture_generation, bench_ooda_cycle);
+pub fn bench_performance_tables(c: &mut Criterion) {
+    c.bench_function("generate_performance_tables", |b| {
+        b.iter(|| {
+            benchmarks::run_all_benchmarks();
+        })
+    });
+}
+
+
+#[cfg(feature = "bench")]
+criterion_group!(benches, bench_architecture_generation, bench_ooda_cycle, bench_performance_tables);
 #[cfg(feature = "bench")]
 criterion_main!(benches);
