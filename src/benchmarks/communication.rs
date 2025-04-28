@@ -156,48 +156,48 @@ fn benchmark_blockchain(num_trials: usize) -> CommArchResult {
 }
 
 // Helper functions for statistics (simplified to avoid dependencies)
-fn calculate_stats(arch: &str, mut results: Vec<f64>, trials: usize) -> CommArchResult {
-    results.sort_by(|a, b| a.partial_cmp(b).unwrap());
+// fn calculate_stats(arch: &str, mut results: Vec<f64>, trials: usize) -> CommArchResult {
+//     results.sort_by(|a, b| a.partial_cmp(b).unwrap());
     
-    // Handle edge case of empty results
-    if results.is_empty() {
-        return CommArchResult {
-            architecture: arch.to_string(),
-            latency_ms: 0.0,
-            latency_variance: 0.0,
-            bandwidth_mbps: 0.0,
-            reliability_pct: 0.0,
-            swap_overhead: "Unknown".to_string(),
-            trials,
-        };
-    }
+//     // Handle edge case of empty results
+//     if results.is_empty() {
+//         return CommArchResult {
+//             architecture: arch.to_string(),
+//             latency_ms: 0.0,
+//             latency_variance: 0.0,
+//             bandwidth_mbps: 0.0,
+//             reliability_pct: 0.0,
+//             swap_overhead: "Unknown".to_string(),
+//             trials,
+//         };
+//     }
     
-    let mean = results.iter().sum::<f64>() / trials as f64;
-    let variance = results.iter()
-        .map(|x| (x - mean).powi(2))
-        .sum::<f64>() / trials as f64;
+//     let mean = results.iter().sum::<f64>() / trials as f64;
+//     let variance = results.iter()
+//         .map(|x| (x - mean).powi(2))
+//         .sum::<f64>() / trials as f64;
     
-    // Percentiles for reliability estimation (handle small sample sizes)
-    let p95_index = ((trials as f64 * 0.95) as usize).min(trials - 1);
-    let p95 = results[p95_index];
-    let reliability = 100.0 - ((p95 - mean) / mean * 100.0).max(0.0);
+//     // Percentiles for reliability estimation (handle small sample sizes)
+//     let p95_index = ((trials as f64 * 0.95) as usize).min(trials - 1);
+//     let p95 = results[p95_index];
+//     let reliability = 100.0 - ((p95 - mean) / mean * 100.0).max(0.0);
     
-    CommArchResult {
-        architecture: arch.to_string(),
-        latency_ms: mean,
-        latency_variance: variance,
-        bandwidth_mbps: 1.0 / mean * 1000.0, // Simplified metric
-        reliability_pct: reliability,
-        swap_overhead: match mean {
-            m if m < 2.0 => "Very Low",
-            m if m < 5.0 => "Low",
-            m if m < 10.0 => "Medium",
-            m if m < 20.0 => "High",
-            _ => "Very High"
-        }.to_string(),
-        trials,
-    }
-}
+//     CommArchResult {
+//         architecture: arch.to_string(),
+//         latency_ms: mean,
+//         latency_variance: variance,
+//         bandwidth_mbps: 1.0 / mean * 1000.0, // Simplified metric
+//         reliability_pct: reliability,
+//         swap_overhead: match mean {
+//             m if m < 2.0 => "Very Low",
+//             m if m < 5.0 => "Low",
+//             m if m < 10.0 => "Medium",
+//             m if m < 20.0 => "High",
+//             _ => "Very High"
+//         }.to_string(),
+//         trials,
+//     }
+// }
 
 pub fn print_results(results: &[CommArchResult]) {
     println!("\nArchitectural Comparison Results:");

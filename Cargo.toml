@@ -23,7 +23,7 @@ name = "pid_bench"
 harness = false
 
 [[bench]]
-name = "integrated_bench"
+name = "integrated_benchmarks"
 harness = false
 
 [dependencies]

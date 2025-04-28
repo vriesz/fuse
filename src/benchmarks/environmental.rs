@@ -220,6 +220,7 @@ pub fn print_terrain_results(results: &[TerrainResult]) {
              results[0].trials);
 }
 
+#[allow(dead_code)]
 trait EnvironmentalTesting {
     fn apply_weather_conditions(&mut self, conditions: &EnvironmentalCondition);
     fn apply_terrain_conditions(&mut self, conditions: &EnvironmentalCondition);
