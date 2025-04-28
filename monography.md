@@ -29,15 +29,15 @@ Date: [Defense Date]
 
 ### **Abstract**
 
-Este trabalho apresenta uma metodologia inovadora para geração autônoma de arquiteturas de aviônica para VANTs usando um framework OODA (Observar-Orientar-Decidir-Agir) de ciclo fechado. Ao formalizar a seleção de arquitetura como um problema de otimização com restrições, demonstramos uma implementação baseada em Rust alcançando taxas de sucesso de simulação de 98% em missões estáticas e 89% em cenários dinâmicos. Inovações chave incluem compressão do ciclo OODA com consciência de latência (abaixo de 100 milissegundos) e validação hardware-in-the-loop (HITL) via ROS 2/Gazebo. A extensibilidade do sistema é comprovada pela integração de redes neurais spiking (SNNs) para avaliação de ameaças e arquiteturas de comunicação avançadas para VANTs em enxame.
+Este trabalho apresenta uma metodologia inovadora para geração autônoma de arquiteturas de fusão de dados para VANTs usando um framework OODA (Observar-Orientar-Decidir-Agir) de ciclo fechado. Formalizamos a seleção de arquitetura como um problema de otimização com restrições, demonstrando taxas de sucesso de simulação de 98% em missões estáticas e 89% em cenários dinâmicos. Contribuições significativas incluem compressão do ciclo OODA com consciência de latência (abaixo de 100 milissegundos) e validação em ambiente de simulação física. O sistema demonstra extensibilidade através da integração de redes neurais spiking (SNNs) para avaliação de ameaças e arquiteturas de comunicação adaptativas para operações de VANTs em enxame.
 
-**Palavras-chave**: VANT, Arquitetura Aviônica, OODA, Rust, ROS 2
+**Palavras-chave**: VANT, Arquitetura de Fusão de Dados, OODA, Adaptação Dinâmica, Sistemas Autônomos
 
 ### **Abstract (English)**
 
-This work presents a novel methodology for autonomous generation of UAV avionics architectures using a closed-loop OODA (Observe-Orient-Decide-Act) framework. By formalizing architecture selection as a constrained optimization problem, we demonstrate a Rust-based implementation achieving 98% simulation success rates in static missions and 89% in dynamic scenarios. Key innovations include latency-aware OODA cycle compression (under 100 milliseconds), and hardware-in-the-loop (HITL) validation via ROS 2/Gazebo. The system's extensibility is proven through integration of spiking neural networks (SNNs) for threat assessment and advanced communication architectures for swarming UAVs.
+This work presents a novel methodology for autonomous generation of data fusion architectures for UAVs using a closed-loop OODA (Observe-Orient-Decide-Act) framework. We formalize architecture selection as a constrained optimization problem, demonstrating 98% simulation success rates in static missions and 89% in dynamic scenarios. Significant contributions include latency-aware OODA cycle compression (under 100 milliseconds) and validation in physics simulation environments. The system demonstrates extensibility through integration of spiking neural networks (SNNs) for threat assessment and adaptive communication architectures for swarming UAV operations.
 
-**Keywords**: UAV, Avionics Architecture, OODA, Rust, ROS 2
+**Keywords**: UAV, Data Fusion Architecture, OODA, Dynamic Adaptation, Autonomous Systems
 
 ### **List of Illustrations**
 
@@ -586,58 +586,36 @@ These results validate our approach of dynamically selecting communication archi
 
 ### **6.1 Summary of Findings**
 
-This work has demonstrated that OODA-driven architecture generation significantly improves UAV performance across diverse operational scenarios. Key findings include:
+This work advances the field of adaptive UAV systems through several key contributions to data fusion architecture design. Our OODA-driven architecture generation approach demonstrates significant performance improvements across diverse operational scenarios, with dynamic adaptation reducing mission reconfiguration latency by 63% compared to static designs. This enables rapid response to changing environmental conditions while maintaining mission effectiveness.
 
-1. **Dynamic Adaptation Effectiveness**: Our approach reduces mission reconfiguration latency by 63% compared to static designs, enabling rapid response to changing conditions.
+The system's environmental resilience capabilities maintain critical functions even in adverse weather and challenging terrain through intelligent architectural reconfiguration. This adaptability proves particularly valuable in conditions that would render static architectures ineffective, such as urban canyons where communication reliability improved by 123% through dynamic protocol selection.
 
-2. **Environmental Resilience**: The system maintains mission-critical functions even in adverse weather and challenging terrain through automatic architectural reconfiguration.
+Our comparative analysis of communication architectures reveals dramatic performance differences across latency, bandwidth, and reliability metrics. No single architecture provides optimal performance across all scenarios, validating our approach of dynamically selecting appropriate mechanisms based on mission requirements and environmental conditions. This selective composition of architectures yields superior overall system performance compared to any fixed configuration.
 
-3. **Communication Architecture Optimization**: The dramatic performance differences between communication architectures (from 0.8ms to 18.3ms latency) validate our approach of dynamically selecting appropriate mechanisms based on mission requirements.
+While performance naturally degrades with increased complexity (from 100% success in static scenarios to 82% in swarm operations), the system maintains acceptable performance even in the most demanding scenarios. This scalability demonstrates the robustness of our approach across mission profiles of varying complexity.
 
-4. **Scalability Challenges**: While performance naturally degrades with increased complexity (from 100% success in static scenarios to 82% in swarm operations), the system maintains acceptable performance even in the most demanding scenarios.
-
-Our comprehensive evaluation demonstrates that no single architectural approach is optimal for all scenarios. Instead, a carefully orchestrated combination of architectures, dynamically selected based on mission requirements, provides the best overall system performance.
-
-```mermaid  
-flowchart LR
-    subgraph Consensus["Consensus Landscape"]
-        Safety["Safety-Critical"]
-        Performance["Performance"]
-        Coordination["Swarm"]
-    end
-    Safety -->|Determinism| TTA
-    Performance -->|Bandwidth| DDS
-    Coordination -->|Negotiation| FIPA
-```  
-*Fig. 2: Positioning of communication architectures in the consensus landscape*
 
 ### **6.2 Future Directions**
 
-Building on this work, we identify several promising directions for future research:
+Building on this foundation, several promising research directions warrant further investigation. Neuromorphic computing integration presents opportunities for enhanced event-based perception with significant energy efficiency improvements. Developing an SNN-to-system compiler would generate verifiable code from trained spiking neural networks, enabling formal verification of neural processing components within the adaptive architecture framework.
 
-1. **Neuromorphic Computing Integration**: Intel's Loihi 2 neuromorphic processor offers potential for enhanced event-based perception with significant energy efficiency improvements. We are developing an SNN-to-Rust compiler that will generate memory-safe, deterministic code from trained spiking neural networks, enabling formal verification of neural processing components.
+Enhanced formal methods for architecture safety verification would provide stronger guarantees about system behavior under all possible inputs and environmental conditions. Extending these techniques to temporal isolation verification would ensure that timing failures in non-critical components cannot affect flight-critical systems, addressing a critical safety concern in adaptive architectures.
 
-2. **Formal Methods Enhancement**: Enhanced model checking for architecture safety proofs will provide stronger guarantees about system behavior under all possible inputs and environmental conditions. This approach will extend to ARINC 653 temporal isolation verification, ensuring that timing failures in non-critical components cannot affect flight-critical systems.
+Communication architecture optimization through refinement of synchronization frameworks and zero-copy mechanisms could further reduce overhead while maintaining the simplicity of the synchronous programming model. Developing a unified middleware abstraction layer would seamlessly integrate all communication mechanisms under a consistent API, simplifying architecture transitions while preserving performance characteristics.
 
-3. **Communication Architecture Optimization**: Further refinement of the PALS framework and zero-copy IPC mechanisms will reduce synchronization overhead while maintaining the simplicity of the synchronous programming model. We aim to develop a unified middleware abstraction layer that seamlessly integrates all communication mechanisms under a consistent API.
-
-4. **Environmental Adaptation Intelligence**: Machine learning-based atmospheric condition prediction will enable proactive reconfiguration rather than reactive adaptation. Integration with satellite-based terrain and foliage databases will enhance the system's ability to model signal propagation through complex environments.
-
-5. **Regulatory Pathway**: We are pursuing DO-178C Level A certification to enable deployment in regulated airspace and commercial applications where safety certification is mandatory. This certification pathway will validate our approach against the highest safety standards for avionics software.
+Machine learning-based environmental adaptation could enable proactive reconfiguration rather than reactive adaptation by predicting atmospheric and terrain conditions. Integration with terrain and foliage databases would enhance the system's ability to model signal propagation through complex environments, further improving communication reliability in challenging conditions.
 
 ### **6.3 Implications for UAV Design**
 
-The results of this research have several significant implications for future UAV design:
+The results of this research have significant implications for future autonomous systems design, particularly in aerial platforms. Our findings challenge the conventional approach of designing UAVs with fixed architectures optimized for specific missions, suggesting instead that architectural flexibility should be incorporated as a fundamental design requirement to enable adaptation across diverse operational scenarios.
 
-1. **Architectural Flexibility**: Our findings challenge the conventional approach of designing UAVs with fixed architectures optimized for specific missions. Future designs should incorporate architectural flexibility as a fundamental requirement.
+The substantial performance differences between communication architectures indicate that UAVs should incorporate multiple communication mechanisms that can be dynamically selected based on operational requirements and environmental conditions. This multi-modal approach ensures reliable communication across the operational envelope while optimizing for mission-specific priorities such as latency or bandwidth.
 
-2. **Communication Strategy**: The substantial performance differences between communication architectures suggest that UAVs should incorporate multiple communication mechanisms that can be dynamically selected based on operational requirements.
+The effectiveness of our environmental adaptation techniques demonstrates the value of comprehensive environmental sensing capabilities beyond those required for basic navigation. These additional sensors provide critical context for architectural adaptation decisions, enabling the system to maintain performance in challenging conditions.
 
-3. **Environmental Sensing**: The effectiveness of our environmental adaptation techniques demonstrates the value of incorporating comprehensive environmental sensing capabilities beyond those required for basic navigation.
+The complexity of adaptive architectures necessitates formal verification techniques to ensure system correctness under all possible configurations. As adaptive systems become more prevalent, verification methodologies that can handle dynamic reconfiguration will become increasingly important for ensuring safety and reliability.
 
-4. **Formal Verification**: The complexity of adaptive architectures necessitates formal verification techniques to ensure system correctness under all possible configurations.
-
-The current work bridges the gap between theoretical avionics design and practical deployment considerations, providing a framework that addresses both the technical and regulatory challenges of modern UAV operations. By enabling dynamic adaptation to changing conditions, this approach significantly enhances UAV capabilities across diverse operational scenarios.
+This work bridges the gap between theoretical architecture design and practical deployment considerations, providing a framework that addresses both the technical and regulatory challenges of modern UAV operations. By enabling dynamic adaptation to changing conditions, this approach significantly enhances autonomous system capabilities across diverse operational scenarios, advancing the field toward truly resilient and versatile aerial platforms.
 
 ## **7. References**
 
