@@ -13,7 +13,7 @@ This dissertation entitled "Adaptive UAV Avionics Architecture Generation: An OO
 
 Approved by:
 
-[Committee Member 1], Chair  
+Prof. Dr. João Paulo Eguea, Chair  
 [Committee Member 2]  
 [Committee Member 3]
 
@@ -21,11 +21,19 @@ Date: [Defense Date]
 
 ### **Dedication**
 
-[Dedication text]
+To my family,
+For the love, understanding
+and encouragement throughout my academic journey.
 
 ### **Acknowledgments**
 
-[Acknowledgments text]
+I am deeply thankful to the Creator, Lord of all Worlds, for guiding my steps and granting me wisdom during this academic pursuit. His grace has been my light during challenging moments.
+
+In the name of the Creator, the Most Compassionate, the Most Merciful, I express my profound gratitude to my family, whose unwavering support, encouragement, and understanding have been my constant source of inspiration throughout this journey.
+
+I would also like to extend my sincere appreciation to the scholarship committee for their generous financial support, which made this academic achievement possible. This opportunity has been invaluable to my growth and development.
+
+May peace and blessings be upon my family and all those who contributed to this endeavor.
 
 ### **Abstract**
 
@@ -41,18 +49,18 @@ This work presents a novel methodology for autonomous generation of data fusion 
 
 ### **List of Illustrations**
 
-**Figure 1a**: Core OODA loop with environmental feedback cycle  
-**Figure 1b**: Integrated system with layered communication architecture  
-**Figure 1c**: Communication architecture options by domain  
-**Figure 1d**: Hardware integration framework with simulation interfaces  
-**Figure 2**: Positioning of communication architectures in the consensus landscape  
+**Figure 3.1**: Core OODA loop with environmental feedback cycle  
+**Figure 3.2**: Integrated system with layered communication architecture  
+**Figure 3.3**: Communication architecture options by domain  
+**Figure 3.4**: Hardware integration framework with simulation interfaces  
+**Figure 3.5**: Positioning of communication architectures in the consensus landscape  
 
 ### **List of Tables**
 
-**Table 1**: Performance across mission profiles (n=50 trials)  
-**Table 2**: Environmental adaptation performance (n=30 trials)  
-**Table 3**: Terrain adaptation performance (n=30 trials)  
-**Table 4**: Communication architecture performance comparison (n=50 trials)  
+**Table 5.1**: Performance across mission profiles (n=50 trials)  
+**Table 5.2**: Environmental adaptation performance (n=30 trials)  
+**Table 5.3**: Terrain adaptation performance (n=30 trials)  
+**Table 5.4**: Communication architecture performance comparison (n=50 trials)  
 
 ### **List of Abbreviations and Acronyms**
 
@@ -208,7 +216,7 @@ flowchart LR
     H[HITL: Gazebo] <-->|Validation| OODA
     W[Weather & Terrain<br>Data] -->|Environmental<br>Context| O
 ```  
-*Fig. 1a: Core OODA loop with environmental feedback cycle*
+*Fig. 3.1: Core OODA loop with environmental feedback cycle*
 
 ### **3.2 Decision Selection Framework**
 
@@ -273,7 +281,7 @@ flowchart TB
     
     HITL[HITL:<br>Gazebo] -->|Validation| UAV
 ```
-*Fig. 1b: Integrated system with layered communication architecture*
+*Fig. 3.2: Integrated system with layered communication architecture*
 
 #### **3.3.2 Communication Architecture Model**
 
@@ -312,7 +320,7 @@ flowchart TB
     DECIDE --> Performance
     DECIDE --> Coordination
 ```
-*Fig. 1c: Communication architecture options by domain*
+*Fig. 3.3: Communication architecture options by domain*
 
 ### **3.4 Hardware Integration Models**
 
@@ -369,7 +377,7 @@ flowchart TB
     
     Simulation <-->|HITL Testing| HardwareLayer
 ```
-*Fig. 1d: Hardware integration framework with simulation interfaces*
+*Fig. 3.4: Hardware integration framework with simulation interfaces*
 
 ### **3.5 Environmental Adaptation Models**
 
@@ -493,7 +501,7 @@ Analysis tools included:
 
 ### **5.1 Mission Performance Analysis**
 
-Our experimental results demonstrate significant performance differences across mission profiles and system configurations. Table 1 presents key performance metrics across different operational scenarios:
+Our experimental results demonstrate significant performance differences across mission profiles and system configurations. Table 5.1 presents key performance metrics across different operational scenarios:
 
 | Scenario     | OODA Cycle (ms) | Power (W) | Success Rate |  
 |--------------|-----------------|-----------|--------------|  
@@ -501,7 +509,7 @@ Our experimental results demonstrate significant performance differences across 
 | Dynamic      | 137.0 ± 11.2    | 23.1      | 89%          |  
 | Swarm (3 UAV)| 210.0 ± 15.6    | 27.4      | 82%          |  
 
-*Table 1: Performance across mission profiles (n=50 trials)*
+*Table 5.1: Performance across mission profiles (n=50 trials)*
 
 These results reveal several significant findings:
 
@@ -513,7 +521,7 @@ These results reveal several significant findings:
 
 ### **5.2 Environmental Adaptation Performance**
 
-Table 2 presents the system's performance across different weather conditions:
+Table 5.2 presents the system's performance across different weather conditions:
 
 | Weather Condition | Comm Performance Degradation | Sensor Reliability | Architecture Adaptation |
 |-------------------|------------------------------|-------------------|------------------------|
@@ -521,7 +529,7 @@ Table 2 presents the system's performance across different weather conditions:
 | High Winds (>30km/h) | 8% packet loss | 15% reduced visual range | Increased control loop rate |
 | Dense Fog | 5% packet loss | 63% reduced visual range | Activated terrain database navigation |
 
-*Table 2: Environmental adaptation performance (n=30 trials)*
+*Table 5.2: Environmental adaptation performance (n=30 trials)*
 
 Key findings include:
 
@@ -533,7 +541,7 @@ Key findings include:
 
 ### **5.3 Terrain Adaptation Performance**
 
-Table 3 presents the system's performance across different terrain types:
+Table 5.3 presents the system's performance across different terrain types:
 
 | Terrain Type | Comm Link Quality | Power Overhead | Selected Architecture |
 |--------------|-------------------|---------------|----------------------|
@@ -541,7 +549,7 @@ Table 3 presents the system's performance across different terrain types:
 | Dense Forest | 82% reliability | +8% | Lower frequency band selection |
 | Mountainous | 79% reliability | +15% | Predictive handover between links |
 
-*Table 3: Terrain adaptation performance (n=30 trials)*
+*Table 5.3: Terrain adaptation performance (n=30 trials)*
 
 Key findings include:
 
@@ -553,7 +561,7 @@ Key findings include:
 
 ### **5.4 Communication Architecture Comparison**
 
-Table 4 presents a comparative analysis of different communication architectures:
+Table 5.4 presents a comparative analysis of different communication architectures:
 
 | Architecture                      | Latency(ms) | ±Var | Bandwidth(Mbps) | Reliability(%) | SWaP |
 |-----------------------------------|-------------|------|-----------------|----------------|------|
@@ -566,7 +574,7 @@ Table 4 presents a comparative analysis of different communication architectures
 | XRCE-DDS                          | 4.20        | 0.70 | 6.30            | 99.923         | Very Low |
 | ARINC 653                         | 2.30        | 0.30 | 18.20           | 99.996         | Medium |
 
-*Table 4: Communication architecture performance comparison (n=50 trials)*
+*Table 5.4: Communication architecture performance comparison (n=50 trials)*
 
 This comparative analysis reveals significant performance differences across various metrics:
 
@@ -593,7 +601,6 @@ The system's environmental resilience capabilities maintain critical functions e
 Our comparative analysis of communication architectures reveals dramatic performance differences across latency, bandwidth, and reliability metrics. No single architecture provides optimal performance across all scenarios, validating our approach of dynamically selecting appropriate mechanisms based on mission requirements and environmental conditions. This selective composition of architectures yields superior overall system performance compared to any fixed configuration.
 
 While performance naturally degrades with increased complexity (from 100% success in static scenarios to 82% in swarm operations), the system maintains acceptable performance even in the most demanding scenarios. This scalability demonstrates the robustness of our approach across mission profiles of varying complexity.
-
 
 ### **6.2 Future Directions**
 
