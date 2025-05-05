@@ -345,7 +345,7 @@ mod tests {
 
         let serialized =
             serde_yaml::to_string(&original_arch).expect("Failed to serialize architecture");
-        let deserialized: UavArchitecture =
+        let deserialized: UAVArchitecture =
             serde_yaml::from_str(&serialized).expect("Failed to deserialize architecture");
 
         // Verify key components remained unchanged

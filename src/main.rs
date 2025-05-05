@@ -1,3 +1,5 @@
+// src/main.rs
+
 mod experiment;
 
 use clap::Parser;

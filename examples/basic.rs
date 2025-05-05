@@ -1,3 +1,5 @@
+// examples/basic.rs
+
 use uav_arch_gen::models::UavConstraints;
 use uav_arch_gen::models::constraints::{SWaPConstraints, MissionType};
 use uav_arch_gen::generate_architecture;

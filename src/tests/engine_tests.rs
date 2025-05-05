@@ -1,3 +1,5 @@
+// src/tests/engine_tests.rs
+
 #[cfg(test)]
 mod tests {
     use crate::engine::*;
@@ -120,7 +122,7 @@ mod tests {
     #[test]
     fn test_cost_optimization() {
         // Create multiple architectures with different processors
-        let arch1 = UavArchitecture {
+        let arch1 = UAVArchitecture {
             processor: Processor::XilinxZynqUltraScale,
             data_fusion: DataFusion::KalmanFilter(KalmanConfig {
                 process_noise: 0.1,

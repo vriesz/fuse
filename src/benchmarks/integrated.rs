@@ -1,3 +1,5 @@
+// src/benchmarks/integrated.rs
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
 use crate::engine::generate_architecture;
 use crate::models::UavConstraints;

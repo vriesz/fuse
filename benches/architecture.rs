@@ -1,3 +1,5 @@
+// benches/architecture.rs
+
 use criterion::{criterion_group, criterion_main, Criterion};
 use uav_arch_gen::engine::generate_architecture;
 use uav_arch_gen::models::UavConstraints;

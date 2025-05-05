@@ -3,12 +3,12 @@
 use crate::models::components::{
     Processor, DataFusion, FlightControllerType, 
     SensorSuite, CommsSystem, KalmanConfig,
-    NeuralNetworkConfig, PIDParams, UavArchitecture
+    NeuralNetworkConfig, PIDParams, UAVArchitecture
 };
 
 use crate::models::constraints::UavConstraints;
 
-pub fn generate_architecture(constraints: &UavConstraints) -> UavArchitecture {
+pub fn generate_architecture(constraints: &UavConstraints) -> UAVArchitecture {
     // Processor and Data Fusion
     let (processor, data_fusion) = match (constraints.secure_comms, constraints.requires_ai) {
         (true, _) => (Processor::XilinxZynqUltraScale, 
@@ -71,7 +71,7 @@ pub fn generate_architecture(constraints: &UavConstraints) -> UavArchitecture {
         CommsSystem::MAVLink { version: 2 }
     };
 
-    UavArchitecture {
+    UAVArchitecture {
         processor,
         data_fusion,
         flight_control,
@@ -80,7 +80,7 @@ pub fn generate_architecture(constraints: &UavConstraints) -> UavArchitecture {
     }
 }
 
-pub fn optimize_cost(architectures: Vec<UavArchitecture>) -> UavArchitecture {
+pub fn optimize_cost(architectures: Vec<UAVArchitecture>) -> UAVArchitecture {
     architectures.into_iter()
         .min_by_key(|arch| match arch.processor {
             Processor::XilinxZynqUltraScale => 1200,

@@ -1,11 +1,12 @@
 // experiments/scripts/run_experiments.rs
+
 use std::fs;
 use serde_yaml;
 use uav_arch_gen::{generate_architecture, models::UavConstraints};
 
 struct Experiment {
     config: ExperimentConfig,
-    generated_arch: UavArchitecture,
+    generated_arch: UAVArchitecture,
     metrics: ExperimentMetrics,
 }
 

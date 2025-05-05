@@ -62,7 +62,7 @@ pub enum Processor {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UavArchitecture {
+pub struct UAVArchitecture {
     pub processor: Processor,
     pub data_fusion: DataFusion,
     pub flight_control: FlightControllerType,

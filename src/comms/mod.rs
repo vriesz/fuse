@@ -1,6 +1,5 @@
 // src/comms/mod.rs
 
-// Serialize/deserialize helpers for Instant
 use serde::{Serialize, Deserialize, Serializer, Deserializer};
 use std::time::{Duration, Instant};
 use openssl::ssl::{SslMethod, SslConnector};
@@ -12,6 +11,7 @@ pub mod fog;
 use tta::TTACycle;
 use dds::DDSQoSProfile;
 use fog::FogComputingManager;
+
 // Custom serialization for Instant (as duration since current time)
 mod instant_serde {
     use super::*;
