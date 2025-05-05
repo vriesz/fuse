@@ -172,7 +172,7 @@ src/
 │   └── ooda_integration.rs     # OODA integration for payload
 └── sensor_fusion/
     └── mod.rs                  # Sensor data fusion algorithms
-└── tests/             # Test suites
+└── tests/                      # Test suites
 ```
 
 ## Communication Architectures
