@@ -1,16 +1,16 @@
 // src/comms/mod.rs
 
-use serde::{Serialize, Deserialize, Serializer, Deserializer};
+use openssl::ssl::{SslConnector, SslMethod};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::time::{Duration, Instant};
-use openssl::ssl::{SslMethod, SslConnector};
 
-pub mod tta;
 pub mod dds;
 pub mod fog;
+pub mod tta;
 
-use tta::TTACycle;
 use dds::DDSQoSProfile;
 use fog::FogComputingManager;
+use tta::TTACycle;
 
 // Custom serialization for Instant (as duration since current time)
 mod instant_serde {
@@ -31,14 +31,14 @@ mod instant_serde {
             Some(instant) => {
                 // Calculate duration since program start
                 let program_duration = instant.elapsed();
-                
+
                 // Serialize as seconds and nanoseconds
                 let duration = InstantDuration {
                     secs: program_duration.as_secs(),
                     nanos: program_duration.subsec_nanos(),
                 };
                 duration.serialize(serializer)
-            },
+            }
             None => serializer.serialize_none(),
         }
     }
@@ -53,7 +53,7 @@ mod instant_serde {
                 // Recreate Instant by subtracting the duration from now
                 let dur = Duration::new(duration.secs, duration.nanos);
                 Ok(Some(Instant::now() - dur))
-            },
+            }
             None => Ok(None),
         }
     }
@@ -122,7 +122,7 @@ impl Clone for SslConnectorWrapper {
         // This is simplified - in practice you'd need to copy all settings
         let builder = SslConnector::builder(SslMethod::tls())
             .expect("Failed to create SSL connector builder");
-        SslConnectorWrapper(builder.build()) 
+        SslConnectorWrapper(builder.build())
     }
 }
 
@@ -130,7 +130,7 @@ impl SslConnectorWrapper {
     pub fn encrypt(&self, data: &[u8]) -> Vec<u8> {
         // This demonstrates that we're using the field
         let _connector = &self.0;
-        
+
         // Simple placeholder implementation
         let mut result = Vec::new();
         result.extend_from_slice(data);
@@ -156,10 +156,10 @@ impl<'de> Deserialize<'de> for SslConnectorWrapper {
     {
         // Skip deserialization and create a new instance
         let _ = <()>::deserialize(deserializer)?;
-        
+
         let builder = SslConnector::builder(SslMethod::tls())
             .map_err(|e| serde::de::Error::custom(format!("OpenSSL error: {}", e)))?;
-        
+
         Ok(SslConnectorWrapper(builder.build()))
     }
 }
@@ -194,16 +194,16 @@ impl<'de> Deserialize<'de> for SecureChannel {
         struct SecureChannelHelper {
             heartbeat_interval: u32,
         }
-        
+
         let helper = SecureChannelHelper::deserialize(deserializer)?;
-        
+
         // Create a new secure channel with default settings
         match Self::new("AES256-SHA256") {
             Ok(mut channel) => {
                 channel.heartbeat_interval = helper.heartbeat_interval;
                 Ok(channel)
-            },
-            Err(e) => Err(serde::de::Error::custom(format!("OpenSSL error: {}", e)))
+            }
+            Err(e) => Err(serde::de::Error::custom(format!("OpenSSL error: {}", e))),
         }
     }
 }
@@ -212,7 +212,7 @@ impl SecureChannel {
     pub fn new(cipher_suite: &str) -> Result<Self, openssl::error::ErrorStack> {
         let mut builder = SslConnector::builder(SslMethod::tls())?;
         builder.set_cipher_list(cipher_suite)?;
-        
+
         Ok(Self {
             connector: SslConnectorWrapper(builder.build()),
             heartbeat_interval: 1000,
@@ -223,11 +223,11 @@ impl SecureChannel {
         // Use the connector to encrypt data
         self.connector.encrypt(data)
     }
-    
+
     pub fn get_heartbeat_interval(&self) -> u32 {
         self.heartbeat_interval
     }
-    
+
     pub fn set_heartbeat_interval(&mut self, interval: u32) {
         self.heartbeat_interval = interval;
     }
@@ -248,7 +248,7 @@ pub struct RadarContact {
     pub distance_m: f32,
     pub bearing_deg: f32,
     pub relative_speed_mps: f32,
-    pub via_link: LinkType,  // Which comms link detected this
+    pub via_link: LinkType, // Which comms link detected this
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -256,7 +256,15 @@ pub struct NavigationBeacon {
     pub id: String,
     pub position: (f32, f32),
     pub signal_strength: f32,
-    pub link_used: LinkType,  // Which comms link received this
+    pub link_used: LinkType, // Which comms link received this
+}
+
+// Define OODA cycle priority enum
+#[derive(Debug, Clone, PartialEq)]
+pub enum CommsPriority {
+    Low,
+    Medium,
+    High,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -277,7 +285,6 @@ pub struct CommunicationHub {
 
 impl CommunicationHub {
     pub fn new(primary: LinkType, secure: bool) -> Self {
-
         let primary_link = CommunicationLink {
             link_type: primary.clone(),
             encryption: secure,
@@ -298,16 +305,19 @@ impl CommunicationHub {
 
         // Initialize appropriate SOTA comms based on link type
         let (tta_cycle, dds_profile, fog_manager) = match &primary {
-            LinkType::TimeTriggered { cycle_time_us, slot_count } => {
-                (Some(TTACycle::new(*cycle_time_us, *slot_count)), None, None)
-            },
-            LinkType::DDS { .. } => {
-                (None, Some(DDSQoSProfile::default()), None)
-            },
-            LinkType::FogComputing { offload_threshold, .. } => {
-                (None, None, Some(FogComputingManager::new(*offload_threshold)))
-            },
-            _ => (None, None, None)
+            LinkType::TimeTriggered {
+                cycle_time_us,
+                slot_count,
+            } => (Some(TTACycle::new(*cycle_time_us, *slot_count)), None, None),
+            LinkType::DDS { .. } => (None, Some(DDSQoSProfile::default()), None),
+            LinkType::FogComputing {
+                offload_threshold, ..
+            } => (
+                None,
+                None,
+                Some(FogComputingManager::new(*offload_threshold)),
+            ),
+            _ => (None, None, None),
         };
 
         Self {
@@ -337,57 +347,47 @@ impl CommunicationHub {
             None => {
                 self.secure_channel = Some(
                     SecureChannel::new("AES256-SHA256")
-                        .map_err(|e| format!("Secure channel failed: {}", e))?
+                        .map_err(|e| format!("Secure channel failed: {}", e))?,
                 );
                 Ok(())
             }
         }
     }
-    
+
     pub fn log_beacon(&mut self, beacon: NavigationBeacon) {
         // Implementation - e.g., store the beacon or process it
         println!("Beacon logged: {} at {:?}", beacon.id, beacon.position);
     }
-}
 
-// Define OODA cycle priority enum
-#[derive(Debug, Clone, PartialEq)]
-pub enum CommsPriority {
-    Low,
-    Medium,
-    High,
-}
-
-impl CommunicationHub {
     pub fn process_ooda_cycle(&mut self, ooda_time: Duration) -> CommsPriority {
         let bandwidth_needed = match ooda_time {
             t if t < Duration::from_millis(100) => CommsPriority::High,
             t if t < Duration::from_millis(500) => CommsPriority::Medium,
             _ => CommsPriority::Low,
         };
-        
+
         match bandwidth_needed {
             CommsPriority::High => {
                 // Fast OODA cycle: use high-bandwidth, low-latency link
                 if self.dds_profile.is_none() {
                     self.dds_profile = Some(DDSQoSProfile::critical_control());
                 }
-                self.primary_link.link_type = LinkType::DDS { 
+                self.primary_link.link_type = LinkType::DDS {
                     reliability_qos: "RELIABLE".into(),
                     deadline_ms: 5,
                     history_depth: 1,
                 };
-            },
+            }
             CommsPriority::Medium => {
                 // Medium OODA cycle: balance reliability and performance
                 if self.tta_cycle.is_none() {
                     self.tta_cycle = Some(TTACycle::new(10000, 8));
                 }
-                self.primary_link.link_type = LinkType::TimeTriggered { 
+                self.primary_link.link_type = LinkType::TimeTriggered {
                     cycle_time_us: 10000,
                     slot_count: 8,
                 };
-            },
+            }
             CommsPriority::Low => {
                 // Slow OODA cycle: optimize for power efficiency
                 if self.fog_manager.is_none() {
@@ -410,22 +410,22 @@ impl CommunicationHub {
                 if self.dds_profile.is_none() {
                     self.dds_profile = Some(DDSQoSProfile::critical_control());
                 }
-                self.primary_link.link_type = LinkType::DDS { 
+                self.primary_link.link_type = LinkType::DDS {
                     reliability_qos: "RELIABLE".into(),
                     deadline_ms: 5,
                     history_depth: 1,
                 };
-            },
+            }
             CommsPriority::Medium => {
                 // Medium OODA cycle: balance reliability and performance
                 if self.tta_cycle.is_none() {
                     self.tta_cycle = Some(TTACycle::new(10000, 8));
                 }
-                self.primary_link.link_type = LinkType::TimeTriggered { 
+                self.primary_link.link_type = LinkType::TimeTriggered {
                     cycle_time_us: 10000,
                     slot_count: 8,
                 };
-            },
+            }
             CommsPriority::Low => {
                 // Slow OODA cycle: optimize for power efficiency
                 if self.fog_manager.is_none() {
