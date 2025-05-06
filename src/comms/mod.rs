@@ -8,6 +8,7 @@ pub mod dds;
 pub mod fog;
 pub mod tta;
 
+use crate::physical::topology::{ComponentId, PhysicalTopology};
 use dds::DDSQoSProfile;
 use fog::FogComputingManager;
 use tta::TTACycle;
@@ -260,7 +261,7 @@ pub struct NavigationBeacon {
 }
 
 // Define OODA cycle priority enum
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CommsPriority {
     Low,
     Medium,
@@ -281,6 +282,8 @@ pub struct CommunicationHub {
     pub dds_profile: Option<DDSQoSProfile>,
     #[serde(skip)]
     pub fog_manager: Option<FogComputingManager>,
+    #[serde(skip)]
+    pub physical_topology: Option<PhysicalTopology>,
 }
 
 impl CommunicationHub {
@@ -329,6 +332,7 @@ impl CommunicationHub {
             tta_cycle,
             dds_profile,
             fog_manager,
+            physical_topology: None,
         }
     }
 
@@ -341,6 +345,149 @@ impl CommunicationHub {
         });
     }
 
+    pub fn set_physical_topology(&mut self, topology: PhysicalTopology) {
+        self.physical_topology = Some(topology);
+    }
+
+    pub fn calculate_message_latency(
+        &self,
+        from: &ComponentId,
+        to: &ComponentId,
+    ) -> Result<f32, String> {
+        if let Some(topology) = &self.physical_topology {
+            // Try to find direct connection
+            if let Some(path) = topology.find_shortest_path(from, to) {
+                topology.get_path_latency(&path)
+            } else {
+                Err(format!("No path found between {} and {}", from, to))
+            }
+        } else {
+            Err("No physical topology defined".to_string())
+        }
+    }
+
+    // Enhance process_message to include physical constraints
+    pub fn process_message(
+        &mut self,
+        data: Vec<u8>,
+        from: ComponentId,
+        to: ComponentId,
+    ) -> Result<f32, String> {
+        let message_size_bits = data.len() as f32 * 8.0;
+
+        if let Some(topology) = &self.physical_topology {
+            if let Some(path) = topology.find_shortest_path(&from, &to) {
+                // Get the latency of the physical path
+                let path_latency_ns = topology.get_path_latency(&path)?;
+
+                // Get the reliability of the path
+                let path_reliability = topology.get_path_reliability(&path)?;
+
+                // Find the bottleneck link in the path
+                let mut min_bandwidth = f32::INFINITY;
+                for i in 0..path.len() - 1 {
+                    let src = &path[i];
+                    let dst = &path[i + 1];
+
+                    if let Some(conn) = topology.connections.get(&(src.clone(), dst.clone())) {
+                        min_bandwidth = min_bandwidth.min(conn.max_data_rate_mbps);
+                    } else if let Some(conn) = topology.connections.get(&(dst.clone(), src.clone()))
+                    {
+                        min_bandwidth = min_bandwidth.min(conn.max_data_rate_mbps);
+                    }
+                }
+
+                // Calculate transmission time based on bandwidth (bits/bandwidth in Mbps)
+                let transmission_time_ns = message_size_bits / (min_bandwidth * 1000.0);
+
+                // Calculate total latency
+                let total_latency_ns = path_latency_ns + transmission_time_ns;
+
+                // Apply reliability - if below threshold, consider it a failure
+                if path_reliability < 99.0 {
+                    // Simulate potential data loss based on reliability
+                    let rand_val: f32 = rand::random();
+                    if rand_val > (path_reliability / 100.0) {
+                        return Err(format!(
+                            "Message lost due to low path reliability ({}%)",
+                            path_reliability
+                        ));
+                    }
+                }
+
+                Ok(total_latency_ns)
+            } else {
+                Err(format!("No path found between {} and {}", from, to))
+            }
+        } else {
+            // Fallback to simplified model if no physical topology is defined
+            let latency_ms = match &self.primary_link.link_type {
+                LinkType::DDS { .. } => 0.5,
+                LinkType::TimeTriggered { .. } => 1.0,
+                LinkType::WiFiDirect { .. } => 2.0,
+                LinkType::MAVLink { .. } => 5.0,
+                LinkType::LoRa { .. } => 50.0,
+                _ => 10.0,
+            };
+
+            Ok(latency_ms * 1_000_000.0) // Convert ms to ns
+        }
+    }
+
+    // Enhance OODA cycle processing to account for physical topology
+    pub fn process_ooda_cycle(&mut self, ooda_time: Duration) -> CommsPriority {
+        let bandwidth_needed = match ooda_time {
+            t if t < Duration::from_millis(100) => CommsPriority::High,
+            t if t < Duration::from_millis(500) => CommsPriority::Medium,
+            _ => CommsPriority::Low,
+        };
+
+        // Check if we have a physical topology to make better decisions
+        if let Some(topology) = &self.physical_topology {
+            // Calculate average latency in the system
+            let mut total_latency = 0.0;
+            let mut count = 0;
+
+            for ((from, to), _) in &topology.connections {
+                if let Ok(latency) = topology.get_path_latency(&[from.clone(), to.clone()]) {
+                    total_latency += latency;
+                    count += 1;
+                }
+            }
+
+            let avg_latency = if count > 0 {
+                total_latency / count as f32
+            } else {
+                1000.0
+            };
+
+            // Adjust priority based on physical constraints
+            let adjusted_priority = if avg_latency > 1000.0 {
+                // If physical latency is high, increase priority
+                match bandwidth_needed {
+                    CommsPriority::Low => CommsPriority::Medium,
+                    _ => CommsPriority::High,
+                }
+            } else if avg_latency < 100.0 {
+                // If physical latency is low, we might be able to reduce priority
+                match bandwidth_needed {
+                    CommsPriority::High if ooda_time > Duration::from_millis(80) => {
+                        CommsPriority::Medium
+                    }
+                    _ => bandwidth_needed,
+                }
+            } else {
+                bandwidth_needed
+            };
+
+            self.adjust_links(adjusted_priority);
+            adjusted_priority
+        } else {
+            // Original behavior without physical topology
+            self.adjust_links(bandwidth_needed.clone());
+            bandwidth_needed
+        }
+    }
     pub fn establish_secure_link(&mut self) -> Result<(), String> {
         match &mut self.secure_channel {
             Some(_) => Ok(()),
@@ -357,50 +504,6 @@ impl CommunicationHub {
     pub fn log_beacon(&mut self, beacon: NavigationBeacon) {
         // Implementation - e.g., store the beacon or process it
         println!("Beacon logged: {} at {:?}", beacon.id, beacon.position);
-    }
-
-    pub fn process_ooda_cycle(&mut self, ooda_time: Duration) -> CommsPriority {
-        let bandwidth_needed = match ooda_time {
-            t if t < Duration::from_millis(100) => CommsPriority::High,
-            t if t < Duration::from_millis(500) => CommsPriority::Medium,
-            _ => CommsPriority::Low,
-        };
-
-        match bandwidth_needed {
-            CommsPriority::High => {
-                // Fast OODA cycle: use high-bandwidth, low-latency link
-                if self.dds_profile.is_none() {
-                    self.dds_profile = Some(DDSQoSProfile::critical_control());
-                }
-                self.primary_link.link_type = LinkType::DDS {
-                    reliability_qos: "RELIABLE".into(),
-                    deadline_ms: 5,
-                    history_depth: 1,
-                };
-            }
-            CommsPriority::Medium => {
-                // Medium OODA cycle: balance reliability and performance
-                if self.tta_cycle.is_none() {
-                    self.tta_cycle = Some(TTACycle::new(10000, 8));
-                }
-                self.primary_link.link_type = LinkType::TimeTriggered {
-                    cycle_time_us: 10000,
-                    slot_count: 8,
-                };
-            }
-            CommsPriority::Low => {
-                // Slow OODA cycle: optimize for power efficiency
-                if self.fog_manager.is_none() {
-                    self.fog_manager = Some(FogComputingManager::new(0.7));
-                }
-                self.primary_link.link_type = LinkType::LoRa {
-                    frequency_mhz: 915,
-                    spreading_factor: 10,
-                };
-            }
-        }
-        self.adjust_links(bandwidth_needed.clone());
-        bandwidth_needed
     }
 
     pub fn adjust_links(&mut self, priority: CommsPriority) {

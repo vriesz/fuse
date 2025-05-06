@@ -1,7 +1,7 @@
 // src/benchmarks/communication.rs
 
-use serde::{Serialize, Deserialize};
-use crate::comms::{LinkType, CommunicationHub};
+use crate::comms::{CommunicationHub, LinkType};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommArchResult {
@@ -24,19 +24,18 @@ pub fn run_architectural_comparison(num_trials: usize) -> Vec<CommArchResult> {
         benchmark_fipa_multi_agent(num_trials),
         benchmark_xrce_dds(num_trials),
         benchmark_arinc653(num_trials),
-        benchmark_blockchain(num_trials),
     ]
 }
 
 fn benchmark_tta_arch(num_trials: usize) -> CommArchResult {
     let _uav = CommunicationHub::new(
-        LinkType::TimeTriggered { 
-            cycle_time_us: 10000, 
-            slot_count: 8 
+        LinkType::TimeTriggered {
+            cycle_time_us: 10000,
+            slot_count: 8,
         },
-        false
+        false,
     );
-    
+
     CommArchResult {
         architecture: "TTA [4] (Time-Triggered Architecture)".to_string(),
         latency_ms: 3.1,
@@ -139,80 +138,31 @@ fn benchmark_arinc653(num_trials: usize) -> CommArchResult {
     }
 }
 
-fn benchmark_blockchain(num_trials: usize) -> CommArchResult {
-    // Implementation for Blockchain (removed from final design but included for comparison)
-    CommArchResult {
-        architecture: "Blockchain (removed)".to_string(),
-        latency_ms: 3200.0,
-        latency_variance: 850.0,
-        bandwidth_mbps: 2.1,
-        reliability_pct: 100.000,
-        swap_overhead: "Very High".to_string(),
-        trials: num_trials,
-    }
-}
-
-// Helper functions for statistics (simplified to avoid dependencies)
-// fn calculate_stats(arch: &str, mut results: Vec<f64>, trials: usize) -> CommArchResult {
-//     results.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    
-//     // Handle edge case of empty results
-//     if results.is_empty() {
-//         return CommArchResult {
-//             architecture: arch.to_string(),
-//             latency_ms: 0.0,
-//             latency_variance: 0.0,
-//             bandwidth_mbps: 0.0,
-//             reliability_pct: 0.0,
-//             swap_overhead: "Unknown".to_string(),
-//             trials,
-//         };
-//     }
-    
-//     let mean = results.iter().sum::<f64>() / trials as f64;
-//     let variance = results.iter()
-//         .map(|x| (x - mean).powi(2))
-//         .sum::<f64>() / trials as f64;
-    
-//     // Percentiles for reliability estimation (handle small sample sizes)
-//     let p95_index = ((trials as f64 * 0.95) as usize).min(trials - 1);
-//     let p95 = results[p95_index];
-//     let reliability = 100.0 - ((p95 - mean) / mean * 100.0).max(0.0);
-    
-//     CommArchResult {
-//         architecture: arch.to_string(),
-//         latency_ms: mean,
-//         latency_variance: variance,
-//         bandwidth_mbps: 1.0 / mean * 1000.0, // Simplified metric
-//         reliability_pct: reliability,
-//         swap_overhead: match mean {
-//             m if m < 2.0 => "Very Low",
-//             m if m < 5.0 => "Low",
-//             m if m < 10.0 => "Medium",
-//             m if m < 20.0 => "High",
-//             _ => "Very High"
-//         }.to_string(),
-//         trials,
-//     }
-// }
-
 pub fn print_results(results: &[CommArchResult]) {
     println!("\nArchitectural Comparison Results:");
-    println!("| {:<46} | {:>10} | {:>8} | {:>12} | {:>14} | {:>12} |", 
-             "Architecture", "Latency(ms)", "±Var", "Bandwidth(Mbps)", "Reliability(%)", "SWaP");
-    println!("|{:-<48}|{:-<12}|{:-<10}|{:-<14}|{:-<16}|{:-<14}|",
-             "", "", "", "", "", "");
-    
+    println!(
+        "| {:<46} | {:>10} | {:>8} | {:>12} | {:>14} | {:>12} |",
+        "Architecture", "Latency(ms)", "±Var", "Bandwidth(Mbps)", "Reliability(%)", "SWaP"
+    );
+    println!(
+        "|{:-<48}|{:-<12}|{:-<10}|{:-<14}|{:-<16}|{:-<14}|",
+        "", "", "", "", "", ""
+    );
+
     for result in results {
-        println!("| {:<46} | {:>10.2} | {:>8.2} | {:>12.2} | {:>14.3} | {:>12} |",
-                 result.architecture, 
-                 result.latency_ms,
-                 result.latency_variance,
-                 result.bandwidth_mbps,
-                 result.reliability_pct,
-                 result.swap_overhead);
+        println!(
+            "| {:<46} | {:>10.2} | {:>8.2} | {:>12.2} | {:>14.3} | {:>12} |",
+            result.architecture,
+            result.latency_ms,
+            result.latency_variance,
+            result.bandwidth_mbps,
+            result.reliability_pct,
+            result.swap_overhead
+        );
     }
-    
-    println!("\n*Table 4: Communication architecture performance comparison (n={} trials)*", 
-             results[0].trials);
+
+    println!(
+        "\n*Table 4: Communication architecture performance comparison (n={} trials)*",
+        results[0].trials
+    );
 }

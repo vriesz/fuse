@@ -1,9 +1,9 @@
 // src/benchmarks/mission.rs
 
-use crate::ooda::OodaLoop;
 use crate::models::architecture::UavSystems;
 use crate::models::constraints::MissionType;
-use serde::{Serialize, Deserialize};
+use crate::ooda::OodaLoop;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -19,49 +19,46 @@ pub struct MissionResult {
 pub fn run_benchmarks(num_trials: usize) -> Vec<MissionResult> {
     // Create static scenario
     let static_results = run_static_scenario(num_trials);
-    
+
     // Create dynamic scenario
     let dynamic_results = run_dynamic_scenario(num_trials);
-    
+
     // Create swarm scenario
     let swarm_results = run_swarm_scenario(num_trials);
-    
+
     vec![static_results, dynamic_results, swarm_results]
 }
 
 fn run_static_scenario(num_trials: usize) -> MissionResult {
     let mut uav = UavSystems::new(MissionType::Surveillance);
     let mut ooda = OodaLoop::new();
-    
+
     // Record cycle times
     let mut cycle_times = Vec::with_capacity(num_trials);
     let mut power_readings = Vec::with_capacity(num_trials);
     let mut success_count = 0;
-    
+
     for _ in 0..num_trials {
         // Simulated static surveillance mission
         uav.reset_to_position(0.0, 0.0, 100.0);
-        
-        let cycle_time = ooda.execute_cycle(
-            &mut uav.comms,
-            &mut uav.payload,
-            &mut uav.flight_controller
-        );
-        
+
+        let cycle_time =
+            ooda.execute_cycle(&mut uav.comms, &mut uav.payload, &mut uav.flight_controller);
+
         cycle_times.push(cycle_time);
         power_readings.push(uav.get_power_consumption());
-        
+
         if uav.mission_successful() {
             success_count += 1;
         }
     }
-    
+
     // Calculate statistics
     let avg_cycle_time = average_duration(&cycle_times);
     let variance = variance_duration(&cycle_times, avg_cycle_time);
     let avg_power = average_f64(&power_readings);
     let success_rate = (success_count as f64 / num_trials as f64) * 100.0;
-    
+
     MissionResult {
         scenario: "Static".to_string(),
         ooda_cycle_ms: avg_cycle_time.as_millis() as f64,
@@ -104,13 +101,14 @@ fn average_duration(durations: &[Duration]) -> Duration {
 
 fn variance_duration(durations: &[Duration], mean: Duration) -> f64 {
     let mean_ms = mean.as_millis() as f64;
-    let squared_diffs: Vec<f64> = durations.iter()
+    let squared_diffs: Vec<f64> = durations
+        .iter()
         .map(|d| {
             let diff = d.as_millis() as f64 - mean_ms;
             diff * diff
         })
         .collect();
-    
+
     squared_diffs.iter().sum::<f64>() / durations.len() as f64
 }
 
@@ -121,13 +119,20 @@ fn average_f64(values: &[f64]) -> f64 {
 pub fn print_results(results: &[MissionResult]) {
     println!("| Scenario     | OODA Cycle (ms) | Power (W) | Success Rate |");
     println!("|--------------|-----------------|-----------|--------------|");
-    
+
     for result in results {
-        println!("| {:<12} | {:.1} ± {:.1}      | {:.1}      | {}%          |",
-                 result.scenario, result.ooda_cycle_ms, result.ooda_variance, 
-                 result.power_w, result.success_rate);
+        println!(
+            "| {:<12} | {:.1} ± {:.1}      | {:.1}      | {}%          |",
+            result.scenario,
+            result.ooda_cycle_ms,
+            result.ooda_variance,
+            result.power_w,
+            result.success_rate
+        );
     }
-    
-    println!("\n*Table 1: Performance across mission profiles (n={} trials)*", 
-             results[0].trials);
+
+    println!(
+        "\n*Table 1: Performance across mission profiles (n={} trials)*",
+        results[0].trials
+    );
 }
