@@ -14,6 +14,10 @@ pub fn integrated_benchmarks() {
     // Run physical benchmarks as well
     let physical_results = super::physical_benchmarks::run_physical_benchmarks(30);
     super::physical_benchmarks::print_results(&physical_results);
+
+    // Run Markov model benchmarks
+    let markov_results = super::markov::run_markov_benchmarks(40);
+    super::markov::print_results(&markov_results);
 }
 
 // For standalone execution

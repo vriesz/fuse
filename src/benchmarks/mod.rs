@@ -6,6 +6,7 @@ pub mod mission;
 pub mod mocks;
 pub mod physical_benchmarks;
 pub mod integrated;
+pub mod markov;
 
 pub fn run_all_benchmarks() {
     println!("\n===== RUNNING BENCHMARKS FROM src/benchmarks =====");
@@ -27,6 +28,10 @@ pub fn run_all_benchmarks() {
     println!("\n----- Physical Layout Benchmarks -----");
     let physical_results = physical_benchmarks::run_physical_benchmarks(30);
     physical_benchmarks::print_results(&physical_results);
+
+    println!("\n----- Markov Environment Model Benchmarks -----");
+    let markov_results = markov::run_markov_benchmarks(50);
+    markov::print_results(&markov_results);
 
     println!("\n===== BENCHMARKS COMPLETE =====");
 }

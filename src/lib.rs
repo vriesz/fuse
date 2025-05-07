@@ -24,4 +24,5 @@ mod tests {
     mod ooda_tests;
     mod payload_tests;
     mod sensor_fusion_tests;
+    mod markov_tests;
 }
